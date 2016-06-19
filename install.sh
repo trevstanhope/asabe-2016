@@ -10,4 +10,4 @@ apt-get install arduino arduino-mk -y -qq
 apt-get install python-numpy -y -qq
 
 # Arduino Libraries
-cp -r libraties/* /usr/share/arduino/libraries
+cp -r libraries/* /usr/share/arduino/libraries
