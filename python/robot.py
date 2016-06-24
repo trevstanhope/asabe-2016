@@ -101,7 +101,7 @@ class Robot:
     
     ## Initialize camera
     def init_cam(self):
-        if self.VERBOSE: self.pretty_print("CTRL", "Initializing Cameras ...")
+        if self.VERBOSE: self.pretty_print("CTRL", "Initializing Camera ...")
         try:
             self.bgr = np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH, 3))
             self.camera = cv2.VideoCapture(self.CAMERA_INDEX)
@@ -117,7 +117,7 @@ class Robot:
 
     ## Capture image
     def capture_image(self):
-        if self.VERBOSE: self.pretty_print("CTRL", "Capturing image ...")
+        if self.VERBOSE: self.pretty_print("CTRL", "Capturing Image ...")
         while True:
             time.sleep(0.01)
             (s, bgr) = self.camera.read()
@@ -125,6 +125,7 @@ class Robot:
                 self.bgr = bgr
             else:
                 self.bgr = np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH, 3))
+                raise Exception("No image captured!")
     
     ## Send request to server
     def request_action(self, status):
