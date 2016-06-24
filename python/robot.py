@@ -22,7 +22,8 @@ import thread
 try:
     CONFIG_PATH = sys.argv[1]
 except Exception as err:
-    exit()
+    print "No configuration file given!"
+    exit(1)
 
 # Robot
 class Robot:
