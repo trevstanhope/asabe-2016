@@ -140,6 +140,7 @@ class Robot:
             }
             dump = json.dumps(request)
             self.socket.send(dump)
+            if self.VERBOSE: self.pretty_print('ZMQ', 'Checking poller ...')
             socks = dict(self.poller.poll(self.ZMQ_TIMEOUT))
             if socks:
                 if socks.get(self.socket) == zmq.POLLIN:
