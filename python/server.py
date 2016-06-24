@@ -159,11 +159,8 @@ class Server:
                 action = 'clear'
         ## If clock running out
         elif self.clock <= self.GIVE_UP_TIME: # if too little time
-            self.pretty_print("DECIDE", "Time almost up! Proceeding to end!")
-            if (request['last_action'] == 'finish') or (request['last_action'] == 'wait'):
-                action = 'wait'
-            else:
-                action = 'end'
+            action = 'end'
+        self.pretty_print("DECIDE", "Time almost up! Proceeding to end!")
         return action
 
     def identify_plant(self, bgr):

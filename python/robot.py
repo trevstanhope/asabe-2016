@@ -52,7 +52,7 @@ class Robot:
         try:
             self.init_zmq()
             self.init_arduino()
-            self.init_cam()
+            self.init_cam() # only the picker has a camera
         except:
             self.close()
 
@@ -113,7 +113,6 @@ class Robot:
             thread.start_new_thread(self.capture_image, ())
         except Exception as e:
             self.pretty_print('CAM', 'Error: %s' % str(e))
-            raise e
 
     ## Capture image
     def capture_image(self):
@@ -159,18 +158,17 @@ class Robot:
                 self.pretty_print('ZMQ', 'Error: Socket Timeout')
                 exit(1)
         except Exception as e:
-            raise e
+            return None
 
     ## Exectute robotic action
-    def execute_command(self, action, attempts=5, wait=2.0):
+    def execute_command(self, command, attempts=5, wait=2.0):
         if self.VERBOSE: self.pretty_print('CTRL', 'Interacting with controller ...')
         try:
-            command = self.ACTIONS[action]
             self.pretty_print("CTRL", "Command: %s" % str(command))
             self.arduino.write(str(command)) # send command
             time.sleep(wait)
-            status = {}
-            while status == {}:
+            status = None
+            while status == None:
                 try:
                     string = self.arduino.readline()
                     status = ast.literal_eval(string) # parse status response
@@ -187,7 +185,11 @@ class Robot:
             return status
         except Exception as e:
             self.pretty_print('CTRL', 'Error: %s' % str(e))
-
+            status = {
+                'command' : '?', 
+                'result' : 255
+            }
+            return status
     ## Run
     def run(self):
         status = {
