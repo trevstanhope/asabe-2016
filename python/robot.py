@@ -22,17 +22,31 @@ import thread
 try:
     CONFIG_PATH = sys.argv[1]
 except Exception as err:
-    print "No configuration file given!"
+    print "No CONFIG_PATH given!"
+    exit(1)
+
+try:
+    ROBOT_TYPE = sys.argv[2]
+except Exception as err:
+    print "No ROBOT_TYPE given!"
     exit(1)
 
 # Robot
 class Robot:
 
     ## Initialize
-    def __init__(self, config_path):
+    def __init__(self, config_path, robot_type):
         
         # Configuration
         self.load_config(config_path)
+
+        # Type
+    
+        if robot_type == 'picker' or robot_type == 'delivery':
+            self.robot_type = robot_type
+        else:
+            print "Unrecognized ROBOT_TYPE!"
+            exit(1)
 
         # Initializers
         try:
@@ -194,5 +208,5 @@ class Robot:
                 break
 
 if __name__ == '__main__':
-    robot = Robot(CONFIG_PATH)
+    robot = Robot(CONFIG_PATH, ROBOT_TYPE)
     robot.run()
