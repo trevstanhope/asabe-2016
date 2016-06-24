@@ -200,8 +200,6 @@ class Robot:
                     status = self.execute_command(action) #!TODO handle different responses
             except Exception as e:
                 self.pretty_print('RUN', 'Error: %s' % str(e))
-                self.close()
-                break
 
 if __name__ == '__main__':
     robot = Robot(CONFIG_PATH, ROBOT_TYPE)

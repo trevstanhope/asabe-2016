@@ -98,113 +98,114 @@ void setup() {
 
 /* --- Loop --- */
 void loop() {
+  delay(1000);
   if (Serial.available() > 0) {
     char val = Serial.read();
     switch (val) {
-    case BEGIN_COMMAND:
-      command = BEGIN_COMMAND;
-      result = begin_run();
-      if (result == 0) { 
-        pass_num = 1;
-        at_end = 0;
-        at_plant = 0; 
-      }
-      break;
-    case ALIGN_COMMAND:
-      command = ALIGN_COMMAND;
-      result = align();
-      if (pass_num == 1) {
-        at_end = 1;
-      }
-      else if (pass_num == 2) {
-        at_end = 2;
-      }
-      break;
-    case SEEK_COMMAND:
-      command = SEEK_COMMAND;
-      result = seek_plant();
-      if (result != 0) {
-        at_end = 0;
-        at_plant = at_plant + result;
-        if (at_plant > 5) { 
-          at_plant = 5; 
+      case BEGIN_COMMAND:
+        command = BEGIN_COMMAND;
+        result = begin_run();
+        if (result == 0) {
+          pass_num = 1;
+          at_end = 0;
+          at_plant = 0;
         }
-      }
-      else {
-        at_plant = 0;
+        break;
+      case ALIGN_COMMAND:
+        command = ALIGN_COMMAND;
+        result = align();
         if (pass_num == 1) {
-          at_end = 2;
-        }
-        else if (pass_num == 2) {
           at_end = 1;
         }
-      }
-      break;
-    case END_COMMAND:
-      command = END_COMMAND;
-      result = seek_end();
-      if (result == 0) {
-        at_plant = 0;
-        if (pass_num == 1) {
+        else if (pass_num == 2) {
           at_end = 2;
         }
-        else if (pass_num == 2) {
-          at_end = 1;
+        break;
+      case SEEK_COMMAND:
+        command = SEEK_COMMAND;
+        result = seek_plant();
+        if (result != 0) {
+          at_end = 0;
+          at_plant = at_plant + result;
+          if (at_plant > 5) {
+            at_plant = 5;
+          }
         }
-      }
-      break;
-    case GRAB_COMMAND:
-      command = GRAB_COMMAND;
-      result = grab();
-      break;
-    case TURN_COMMAND:
-      command = TURN_COMMAND;
-      result = turn();
-      if (result == 0) {
+        else {
+          at_plant = 0;
+          if (pass_num == 1) {
+            at_end = 2;
+          }
+          else if (pass_num == 2) {
+            at_end = 1;
+          }
+        }
+        break;
+      case END_COMMAND:
+        command = END_COMMAND;
+        result = seek_end();
+        if (result == 0) {
+          at_plant = 0;
+          if (pass_num == 1) {
+            at_end = 2;
+          }
+          else if (pass_num == 2) {
+            at_end = 1;
+          }
+        }
+        break;
+      case GRAB_COMMAND:
+        command = GRAB_COMMAND;
+        result = grab();
+        break;
+      case TURN_COMMAND:
+        command = TURN_COMMAND;
+        result = turn();
+        if (result == 0) {
+          at_end = 0;
+          at_plant = 0;
+          if (pass_num == 1) {
+            pass_num = 2;
+          }
+        }
+        break;
+      case JUMP_COMMAND:
+        command = JUMP_COMMAND;
+        result = jump();
+        if (result == 0) {
+          at_end = 0;
+          at_plant = 0;
+          pass_num = 1;
+        }
+        break;
+      case FINISH_COMMAND:
+        command = FINISH_COMMAND;
         at_end = 0;
         at_plant = 0;
-        if (pass_num == 1) {
-          pass_num = 2;
-        }
-      }
-      break;
-    case JUMP_COMMAND:
-      command = JUMP_COMMAND;
-      result = jump();
-      if (result == 0) {
+        pass_num = 0;
+        result = finish_run();
+        break;
+      case REPEAT_COMMAND:
+        break;
+      case PING_COMMAND:
+        command = PING_COMMAND;
+        result = ping();
+        break;
+      case WAIT_COMMAND:
+        command = WAIT_COMMAND;
+        result = wait();
+        break;
+      case CLEAR_COMMAND:
         at_end = 0;
         at_plant = 0;
-        pass_num = 1;
-      }
-      break;
-    case FINISH_COMMAND:
-      command = FINISH_COMMAND;
-      at_end = 0;
-      at_plant = 0;
-      pass_num = 0;
-      result = finish_run();
-      break;
-    case REPEAT_COMMAND:
-      break;
-    case PING_COMMAND:
-      command = PING_COMMAND;
-      result = ping();
-      break;
-    case WAIT_COMMAND:
-      command = WAIT_COMMAND;
-      result = wait();
-      break;
-    case CLEAR_COMMAND:
-      at_end = 0;
-      at_plant = 0;
-      pass_num = 0;
-      command = CLEAR_COMMAND;
-      result = wait();
-      break;
-    default:
-      result = 255;
-      command = UNKNOWN_COMMAND;
-      break;
+        pass_num = 0;
+        command = CLEAR_COMMAND;
+        result = wait();
+        break;
+      default:
+        result = 255;
+        command = UNKNOWN_COMMAND;
+        break;
     }
     sprintf(output, "{'command':'%c','result':%d,'at_plant':%d,'at_end':%d,'pass_num':%d,'line':%d,'dist':%d}", command, result, at_plant, at_end, pass_num, int(offset.getMedian()), int(dist.getMedian()));
     Serial.println(output);
@@ -230,7 +231,7 @@ int begin_run(void) {
   // Pull forward
   set_servos(10, -20, 10, -20);
   delay(1000);
-  
+
   // Rotate towards the line
   set_servos(-20, -20, -20, -20);
   while (abs(find_offset(LINE_THRESHOLD)) > 1) {
@@ -246,10 +247,10 @@ int begin_run(void) {
 int align(void) {
   /*
     Aligns robot at end of T.
-   
-   1. Wiggle onto line
-   2. Reverse to end of line  
-   */
+
+    1. Wiggle onto line
+    2. Reverse to end of line
+  */
 
   // Wiggle onto line
   int x = find_offset(LINE_THRESHOLD);
@@ -286,7 +287,7 @@ int align(void) {
     }
     delay(50);
   }
-  set_servos(0, 0, 0, 0); // Halt 
+  set_servos(0, 0, 0, 0); // Halt
 
   // Reverse to end
   while (x != 255)  {
@@ -307,11 +308,11 @@ int align(void) {
       set_servos(-10, 10, -10, 10);
     }
     else if (x == -255) {
-      set_servos(0, 0, 0, 0); // Halt 
+      set_servos(0, 0, 0, 0); // Halt
       break;
     }
   }
-  
+
   // Pull forward onto line
   int j = 0;
   while (abs(find_offset(LINE_THRESHOLD)) > 2) {
@@ -323,18 +324,18 @@ int align(void) {
     }
     find_distance();
   }
-  set_servos(0, 0, 0, 0); // Halt 
+  set_servos(0, 0, 0, 0); // Halt
   return 0;
 }
 
 int seek_plant(void) {
 
   // Prepare for movement
-  pwm.setPWM(ARM_SERVO, 0, MICROSERVO_ZERO); 
+  pwm.setPWM(ARM_SERVO, 0, MICROSERVO_ZERO);
   int x = find_offset(LINE_THRESHOLD);
   int d = find_distance();
   int actions = 0;
-  
+
   // Move past end
   if (x == 255) {
     while (x == 255) {
@@ -342,7 +343,7 @@ int seek_plant(void) {
       set_servos(20, -20, 20, -20);
     }
   }
-  
+
   // Move past plant
   while (d < FAR_THRESHOLD)  {
     d = find_distance();
@@ -396,7 +397,7 @@ int seek_plant(void) {
       set_servos(-10, 10, -10, 10);
       while (abs(find_offset(LINE_THRESHOLD)) > 2) {
         delay(50);
-      }        
+      }
       break;
     }
     else if (x == 255) {
@@ -410,7 +411,7 @@ int seek_plant(void) {
       }
     }
     if ((find_distance() <= DISTANCE_THRESHOLD) && (at_plant < 5) && (actions > MIN_ACTIONS)) {
-      for (int k = 0; k<15; k++) { 
+      for (int k = 0; k < 15; k++) {
         x = find_offset(LINE_THRESHOLD);
         if (x == -1) {
           set_servos(20, -10, 20, -10);
@@ -433,7 +434,7 @@ int seek_plant(void) {
       if (result == 0) {
         result = 1;
       }
-      set_servos(0,0,0,0);
+      set_servos(0, 0, 0, 0);
       return result;
     }
     delay(50);
@@ -496,17 +497,17 @@ int jump(void) {
   while (abs(find_offset(LINE_THRESHOLD)) > 2) {
     delay(20); // Run until line reached
   }
-  
+
   // Pull forward
   set_servos(15, -15, 15, -15);
   delay(HALFSTEP_INTERVAL);
-  
+
   // Rotate towards the line
   set_servos(-20, -20, -20, -20);
   while (abs(find_offset(LINE_THRESHOLD)) > 2) {
     delay(20); // Run until line reached
   }
-  set_servos(0,0,0,0);
+  set_servos(0, 0, 0, 0);
   return 0;
 }
 
@@ -527,7 +528,7 @@ int grab(void) {
   for (int i = MICROSERVO_MIN; i < MICROSERVO_MAX + 50; i++) {
     pwm.setPWM(ARM_SERVO, 0, i);   // Grab block
     //if (i % 2) {
-      //delay(1);
+    //delay(1);
     //}
   }
   pwm.setPWM(ARM_SERVO, 0, MICROSERVO_MAX - 100 );
@@ -544,7 +545,7 @@ int finish_run(void) {
   set_servos(20, -20, 20, -20); // move forward one space
   delay(STEP_INTERVAL);
   set_servos(27, 27, 27, 27); // turn right 90 degrees
-  delay(TURN90_INTERVAL); 
+  delay(TURN90_INTERVAL);
   set_servos(20, -25, 20, -25); // turn right 90 degrees
   delay(HALFSTEP_INTERVAL); // was STEP_INTERVAL on K-state board
   set_servos(30, -30, 30, -30); // turn right 90 degrees
@@ -593,16 +594,16 @@ int find_offset(int threshold) {
   else if ((l < threshold) && (c < threshold) && (r < threshold)) {
     x = -255; // off entirely
   }
-  else if ((l > threshold) && (c > threshold) && (r > threshold)){
+  else if ((l > threshold) && (c > threshold) && (r > threshold)) {
     x = 255;
   }
-  else if ((l > threshold) && (c < threshold) && (r > threshold)){
+  else if ((l > threshold) && (c < threshold) && (r > threshold)) {
     x = 255;
   }
   else {
     x = 0;
   }
-  
+
   offset.add(x);
   int val = offset.getMedian();
   // Serial.println(val);
@@ -633,7 +634,7 @@ int find_distance(void) {
 
 void set_servos(int fl, int fr, int bl, int br) {
   pwm.setPWM(FRONT_LEFT_SERVO, 0, SERVO_OFF + fl + FL);
-  pwm.setPWM(FRONT_RIGHT_SERVO, 0, SERVO_OFF + fr +FR);
+  pwm.setPWM(FRONT_RIGHT_SERVO, 0, SERVO_OFF + fr + FR);
   pwm.setPWM(BACK_LEFT_SERVO, 0, SERVO_OFF + bl + BL);
   pwm.setPWM(BACK_RIGHT_SERVO, 0, SERVO_OFF + br + BR);
 }
