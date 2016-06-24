@@ -127,7 +127,7 @@ class Robot:
     
     ## Send request to server
     def request_action(self, status):
-        if self.VERBOSE: self.pretty_print('ZMQ', 'Pushing request to server ...')
+        if self.VERBOSE: self.pretty_print('ZMQ', 'Requesting action from server ...')
         try:
             last_action = [key for key, value in self.ACTIONS.iteritems() if value == status['command']][0]
             bgr = self.bgr
@@ -188,7 +188,7 @@ class Robot:
     def run(self):
         status = {
             'robot' : self.robot_type,
-            'command' : None,
+            'command' : '?', # start with nothing
         }
         action = None
         while True:
