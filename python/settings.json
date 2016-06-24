@@ -19,7 +19,7 @@
     "NUM_ROWS" : 4,
     "RUN_TIME" : 480,
     "GIVE_UP_TIME" : 20,
-    "ARDUINO_DEV" : "/dev/ttyACM0",
+    "ARDUINO_DEV" : "/dev/ttyACM",
     "ARDUINO_BAUD" : 9600,
     "ARDUINO_TIMEOUT" : 10,
     "CAMERA_INDEX" : 0,
