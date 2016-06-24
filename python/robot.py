@@ -191,11 +191,7 @@ class Robot:
     ## Run
     def run(self):
         status = {
-            'at_plant' : False,
-            'at_end' : False,
-            'pass_num' : 0,
-            'command' : '?',
-            'result' : 255
+            'robot' : self.robot_type
         }
         while True:
             try:
