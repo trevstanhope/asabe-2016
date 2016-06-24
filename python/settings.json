@@ -12,7 +12,7 @@
     "MONGO_DB" : "phenotype_%m_%d",
     "MONGO_COL" : "%H_%M",
     "ZMQ_HOST" : "tcp://*:1980",
-    "ZMQ_ADDR" : "tcp://192.168.0.100:1980",
+    "ZMQ_ADDR" : "tcp://192.168.0.104:1980",
     "ZMQ_TIMEOUT" : 10000,
     "TIME_FORMAT" : "%Y-%m-%d %H:%M:%S",
     "NUM_PLANTS" : 20,
