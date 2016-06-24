@@ -187,7 +187,8 @@ class Robot:
     ## Run
     def run(self):
         status = {
-            'robot' : self.robot_type
+            'robot' : self.robot_type,
+            'command' : None,
         }
         action = None
         while True:
