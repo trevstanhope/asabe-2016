@@ -150,17 +150,7 @@ class Server:
             jump()
         """
         self.pretty_print("DECIDE", "Last Action: %s" % request['last_action'])
-        self.pretty_print("DECIDE", "Result: %s" % request['result'])
-        self.pretty_print("DECIDE", "Row: %d" % self.row_num)
-        self.pretty_print("DECIDE", "Plants Observed: %d" % self.plant_num)
-        self.pretty_print("DECIDE", "Blocks Collected: %d" % self.samples_num)
-        self.at_end = request['at_end']
-        self.pass_num = request['pass_num']
-        self.at_plant = request['at_plant']
-        self.last_action = request['last_action']
-        self.pretty_print("DECIDE", "At End: %d" % self.at_end)
-        self.pretty_print("DECIDE", "At Plant: %d" % self.at_plant)
-        self.pretty_print("DECIDE", "Pass Num: %d" % self.pass_num)
+        self.pretty_print("DECIDE", "Robot: %s" % request['robot'])
         ## If paused
         if self.running == False:
             if request['last_action'] == 'clear':
@@ -168,81 +158,14 @@ class Server:
             else:
                 action = 'clear'
         ## If clock running out
-        elif self.clock <= self.GIVE_UP_TIME and (self.pass_num == 2): # if too little time
+        elif self.clock <= self.GIVE_UP_TIME: # if too little time
             self.pretty_print("DECIDE", "Time almost up! Proceeding to end!")
-            if (self.last_action == 'finish') or (self.last_action == 'wait'):
+            if (request['last_action'] == 'finish') or (request['last_action'] == 'wait'):
                 action = 'wait'
-            elif self.at_end == 1:
-                action = 'finish'
             else:
                 action = 'end'
-        ## If searching for plants 
-        elif (self.row_num <= self.NUM_ROWS) and (self.plant_num < self.NUM_PLANTS):
-            if self.row_num == 0:
-                action = 'begin' # begin if first action
-                self.row_num = 1
-            elif request['last_action'] == 'begin':
-                action = 'align' # align if jumped to beginning
-            elif request['last_action'] == 'align':
-                if (self.row_num in [1,2,3]) and (self.pass_num == 2):
-                    action = 'end' # seek to end/plant if aligned at end of row to search
-                else: 
-                    action = 'seek' # seek blindly if aligned at end of doubled row
-            elif request['last_action'] == 'seek' or request['last_action'] == 'end':
-                if request['at_end'] == 2:
-                    action = 'turn' # turn if at far end
-                elif request['at_end'] == 1:
-                    if self.row_num == self.NUM_ROWS:
-                        action = 'finish' # finish if at end of last row
-                        self.row_num = 0
-                    else:
-                        action = 'jump' # jump if at near end
-                        self.row_num = self.row_num + 1
-                elif request['at_plant'] != 0:
-                    (color, height, bgr2) = self.identify_plant(np.array(request['bgr'], np.uint8))
-                    self.pretty_print('DECIDE', 'Color: %s' % color)
-                    self.pretty_print('DECIDE', 'Height: %s' % height)
-                    self.bgr = bgr2
-                    if self.pass_num == 1:
-                        row = self.row_num
-                        plant = self.at_plant
-                    elif self.pass_num == 2:
-                        row = self.row_num + 1
-                        plant = 6 - self.at_plant # run plants backward
-                    s = self.add_plant(row, plant, color, height)
-                    if s: self.plant_num += 1
-                    if self.collected_plants[color][height] == True: # check if plant type has been seen yet
-                        action = 'seek'
-                    else:
-                        self.collected_plants[color][height] = True # if not, set to true and grab
-                        action = 'grab'
-                        self.samples_num += 1
-                else:
-                    action = 'seek'
-            elif request['last_action'] == 'turn':
-                action = 'align'
-            elif request['last_action'] == 'grab':
-                action = 'seek'
-            elif request['last_action'] == 'jump':
-                action = 'align'
-            else:
-                action = 'wait'
-        ## If at last row or reached 20 plants
-        else:
-            self.pretty_print("DECIDE", "20 plants and/or 4 rows! Proceeding to end!")
-            if self.last_action == 'finish':
-                action = 'wait'
-            if self.last_action == 'wait':
-                action = 'wait'
-            elif self.at_end == 2:
-                action = 'turn'
-            elif self.at_end == 1:
-                action = 'finish' # if part-way along final row (i.e. not at end #1)
-            elif self.at_end == 0:
-                action = 'end'
-            else:
-                action = 'wait' # if last plant was row 4, plant 5 (i.e. 20 plants in 20 positions)
         return action
+
     def identify_plant(self, bgr):
         """
         Returns:
