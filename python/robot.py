@@ -125,7 +125,6 @@ class Robot:
                 self.bgr = bgr
             else:
                 self.bgr = np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH, 3))
-                raise Exception("No image captured!")
     
     ## Send request to server
     def request_action(self, status):
