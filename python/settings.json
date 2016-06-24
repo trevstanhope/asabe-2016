@@ -1,5 +1,5 @@
 {
-    "VERBOSE" : false,
+    "VERBOSE" : true,
     "CHERRYPY_ADDR" : "127.0.0.1",
     "CHERRYPY_PORT" : 8080,
     "CHERRYPY_STATIC_DIR" : "static",

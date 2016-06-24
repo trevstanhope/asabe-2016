@@ -134,10 +134,6 @@ class Robot:
             request = {
                 'type' : 'request',
                 'last_action' : last_action,
-                'result' : status['result'],
-                'at_end' : status['at_end'],
-                'at_plant' : status['at_plant'],
-                'pass_num' : status['pass_num'],
                 'bgr' : bgr.tolist()
             }
             dump = json.dumps(request)
