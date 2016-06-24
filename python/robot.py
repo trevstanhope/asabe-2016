@@ -193,6 +193,7 @@ class Robot:
         status = {
             'robot' : self.robot_type
         }
+        action = None
         while True:
             try:
                 action = self.request_action(status)
