@@ -156,6 +156,7 @@ class Robot:
                     self.pretty_print('ZMQ', 'Error: Poll Timeout')
             else:
                 self.pretty_print('ZMQ', 'Error: Socket Timeout')
+                exit(1)
         except Exception as e:
             raise e
 
