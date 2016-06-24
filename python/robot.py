@@ -134,7 +134,7 @@ class Robot:
             bgr = self.bgr
             request = {
                 'type' : 'request',
-                'robot': self.robot_type
+                'robot': self.robot_type,
                 'last_action' : last_action,
                 'bgr' : bgr.tolist()
             }
