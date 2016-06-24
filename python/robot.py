@@ -98,7 +98,6 @@ class Robot:
                 break
             except Exception as e:
                 self.pretty_print('CTRL', 'Error: %s' % str(e))
-                raise e
     
     ## Initialize camera
     def init_cam(self):
