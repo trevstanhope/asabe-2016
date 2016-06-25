@@ -98,188 +98,58 @@ class Server:
         except Exception as error:
             self.pretty_print('ZMQ', str(error))   
     
-    ## Statemachine Functions
+    ## State-Machine Functions
     def __init_statemachine__(self):
         self.bgr = cv2.imread(self.GUI_CAMERA_IMAGE)
         self.running = False
-        self.row_num = 0
-        self.plant_num = 0
-        self.pass_num = 0
-        self.samples_num = 0
-        self.at_plant = 0
-        self.at_end = 0
         self.start_time = time.time()
         self.end_time = self.start_time + self.RUN_TIME
         self.clock = self.end_time - self.start_time
-        self.observed_plants = [] #TODO can add dummy vals here
-        self.collected_plants = {
-            'green' : {
-                'short' : False,
-                'tall' : False                
-            },
-            'brown' : {
-                'short' : False,
-                'tall' : False                
-            },
-            'yellow' : {
-                'short' : False,
-                'tall' : False
-            }
-        }
+
     def decide_action(self, request):
         """
         Below is the Pseudocode for how the decisions are made:
 
         start()
-        for row in range(4):
-            align()
-            while not at_end:
-                (at_end, at_plant, img) = seek
-                if at_plant: 
-                    (color, height, is_new) = identify_plant()
-                    if is_new: 
-                        grab()
-            turn()
-            align()
-            while not at_end:
-                (at_end, at_plant, img) = seek
-                if at_plant: 
-                    (color, height, is_new) = identify_plant()
-                    if is_new: 
-                        grab()
-            jump()
         """
         self.pretty_print("DECIDE", "Last Action: %s" % request['last_action'])
         self.pretty_print("DECIDE", "Robot: %s" % request['robot'])
+
         ## If paused
         if self.running == False:
             if request['last_action'] == 'clear':
                 action = 'wait'
             else:
                 action = 'clear'
-        ## If clock running out
-        elif self.clock <= self.GIVE_UP_TIME: # if too little time
+        ## If running
+        elif self.clock > 0: 
+            if request['robot'] == 'picker':
+                action = 'wait'
+            elif request['robot'] == 'delivery':
+                action = 'wait'
+            else:
+                raise Exception("Unrecgnized robot identifier!")
+        ## If times is up
+        else:
             action = 'end'
-        self.pretty_print("DECIDE", "Time almost up! Proceeding to end!")
         return action
 
-    def identify_plant(self, bgr):
+    def find_ball(self, bgr):
         """
         Returns:
-            color : green, yellow, brown
-            height: short, tall
-            is_new : true/false
+            color : green, yellow
+            pos: x, y, z
         """
-        if self.VERBOSE: self.pretty_print("CV2", "Identifying plant phenotype ...")
+        if self.VERBOSE: self.pretty_print("CV2", "Searching for ball ...")
         try:
             # Blur image
             bgr = cv2.medianBlur(bgr, 5)
-            thin_kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(8,8))
-            fat_kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(10,10))
-            brown_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(10,10))
-            hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
-            detected_areas = [ (0,0,0,0) ] * 3
-            
-            ## Green
-            try:
-                green_low = np.array([25, 20, 5]) 
-                green_high = np.array([75, 255, 128])
-                green_mask = cv2.inRange(hsv, green_low, green_high)
-                green_invmask = cv2.bitwise_not(green_mask)
-                green_closed = cv2.morphologyEx(green_invmask, cv2.MORPH_CLOSE, thin_kernel)
-                green_eroded = cv2.erode(green_closed, fat_kernel)
-                green_output = cv2.bitwise_not(green_eroded)
-                ret,thresh = cv2.threshold(green_output, 127, 255, 0)
-                contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-                areas = [cv2.contourArea(c) for c in contours]
-                max_index = np.argmax(areas) # Find the index of the largest contour
-                cnt = contours[max_index]
-                x,y,w,h = cv2.boundingRect(cnt)
-                detected_areas[0] = (x, y, w, h)
-            except Exception as e:
-                self.pretty_print('CV', 'Error: %s' % str(e))
-            
-            ## Yellow
-            try:
-                yellow_low = np.array([15, 128, 115])
-                yellow_high = np.array([35, 255, 255])
-                yellow_mask = cv2.inRange(hsv, yellow_low, yellow_high)
-                yellow_invmask = cv2.bitwise_not(yellow_mask)
-                yellow_closed = cv2.morphologyEx(yellow_invmask, cv2.MORPH_CLOSE, thin_kernel)
-                yellow_eroded = cv2.erode(yellow_closed, fat_kernel)
-                yellow_output = cv2.bitwise_not(yellow_eroded)
-                ret,thresh = cv2.threshold(yellow_output, 127, 255, 0)
-                contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-                areas = [cv2.contourArea(c) for c in contours] 
-                max_index = np.argmax(areas) # Find the index of the largest contour
-                cnt = contours[max_index]
-                x,y,w,h = cv2.boundingRect(cnt)
-                detected_areas[1] = (x, y, w, h)
-            except Exception as e:
-                self.pretty_print('CV', 'Error: %s' % str(e))
-                
-            ## Brown
-            try:
-                brown_low_1 = np.array([0,0,0])
-                brown_high_1 = np.array([25,255,150])
-                brown_low_2 = np.array([160,0,0])
-                brown_high_2 = np.array([180,255,150])
-                brown_grey = cv2.cvtColor(bgr,cv2.COLOR_BGR2GRAY)
-                brown_mask_1 = cv2.inRange(hsv, brown_low_1, brown_high_1)
-                brown_mask_2 = cv2.inRange(hsv, brown_low_2, brown_high_2)
-                brown_mask = brown_mask_1 + brown_mask_2
-                brown_closed = cv2.morphologyEx(brown_mask, cv2.MORPH_CLOSE, brown_kernel)
-                brown_cut = cv2.bitwise_and(brown_grey, brown_closed)
-                brown_cut[brown_cut == 0] = 255
-                brown_thresh = cv2.threshold(brown_cut, 80, 255, cv2.THRESH_BINARY)[1]
-                brown_invmask = cv2.bitwise_not(brown_thresh)
-                brown_eroded = cv2.erode(brown_invmask, brown_kernel)
-                ret, thresh = cv2.threshold(brown_eroded, 127, 255, 0)
-                contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-                areas = [cv2.contourArea(c) for c in contours] # Find the index of the largest contour
-                max_index = np.argmax(areas)
-                cnt = contours[max_index]
-                x,y,w,h = cv2.boundingRect(cnt)
-                detected_areas[2] = (x, y, w, h)
-            except Exception as e:
-                self.pretty_print('CV', 'Error: %s' % str(e))
-    
-            # Find most likely
-            areas = [w*h for (x, y, w, h) in detected_areas]
-            max_area = max(areas)
-            i = np.argmax(areas)
-            (x, y, w, h) = detected_areas[i]
-            if i == 0:
-                c = (0,255,0)
-                color = 'green'
-            elif i == 1:
-                c = (0,255,255)
-                color = 'yellow'
-            elif i == 2:
-                c = (0,87,115)
-                color = 'brown'
-            if h > self.CAMERA_TALL_THRESHOLD:
-                height = 'tall'
-            else:
-                height = 'short'
-            # bgr = np.dstack((brown_eroded, brown_eroded, brown_eroded)) # remove
-            cv2.rectangle(bgr,(x,y),(x+w,y+h), c, 2) # Draw the rectangle
+
         except Exception as e:
             self.pretty_print("CV", "ERROR: %s" % str(e))
-            self.pretty_print("CV", "RANDOMLY ESTIMATING ...")
-            colors = ['green', 'yellow', 'brown']
-            heights = ['tall', 'short']
-            i = randint(0,2)
-            j = randint(0,1)
-            color = color[i]
-            height = heights[j]
-        return color, height, bgr
-    def add_plant(self, row, plant, color, height):
-        for p in self.observed_plants:
-            if p == (row, plant, color, height):
-                return False
-        self.observed_plants.append((row, plant, color, height))
-        return True
+            color = None
+            (x,y,z) = (None, None, None)
+        return color, (x,y,z)
  
     ## CherryPy Functions
     def __init_tasks__(self):
@@ -289,6 +159,7 @@ class Server:
             Monitor(cherrypy.engine, self.refresh, frequency=self.CHERRYPY_REFRESH_INTERVAL).subscribe()
         except Exception as error:
             self.pretty_print('CHERRYPY', str(error))
+
     def listen(self):
         """ Listen for Next Sample """
         if self.VERBOSE: self.pretty_print('CHERRYPY', 'Listening for nodes ...')
@@ -296,13 +167,14 @@ class Server:
         self.bgr = np.array(req['bgr'], np.uint8)
         action = self.decide_action(req)
         resp = self.send_response(action)
-        if self.MONGO_ENABLED: event_id = self.store_event(req, resp)
+
     def refresh(self):
         """ Update the GUI """
         if self.VERBOSE: self.pretty_print('CHERRYPY', 'Updating GUI ...')
-        robot_position = (self.row_num, self.at_plant, self.pass_num, self.at_end)
         self.gui.draw_camera(self.bgr)
-        self.gui.draw_board(robot_position)
+        picker_position = (0,0) #TODO
+        delivery_position = (0,0) #TODO
+        self.gui.draw_board(picker_position, delivery_position)
         if self.running:
             self.clock = self.end_time - time.time()
             if self.clock <= 0:
@@ -310,11 +182,13 @@ class Server:
         else:
             self.end_time = time.time() + self.clock         
         self.gui.update_gui(self.clock)
+
     @cherrypy.expose
     def index(self):
         """ Render index page """
         html = open('static/index.html').read()
         return html
+
     @cherrypy.expose
     def default(self, *args, **kwargs):
         """
@@ -336,15 +210,19 @@ class Server:
             self.running= False
         except Exception as error:
             self.pretty_print('GUI', str(error))
+
     def run(self, object):
         self.pretty_print("GUI", "Running session ...")
         self.running = True
+
     def stop(self, object):
         self.pretty_print("GUI", "Halting session ...")
         self.running = False
+
     def reset(self, object):
         self.pretty_print("GUI", "Resetting to start ...")
         self.__init_statemachine__() # reset values
+
     def close(self, widget, window):
         try:
             gtk.main_quit()
@@ -363,13 +241,11 @@ class GUI(object):
             - run()
         """
         try:
-            # CONSTANTS
-            self.GUI_LABEL_PASS = object.GUI_LABEL_PASS
-            self.GUI_LABEL_PLANTS = object.GUI_LABEL_PLANTS
-            self.GUI_LABEL_ROW = object.GUI_LABEL_ROW
-            self.GUI_LABEL_SAMPLES = object.GUI_LABEL_SAMPLES
+            
+            # Constants
             self.GUI_LABEL_CLOCK = object.GUI_LABEL_CLOCK
             self.GUI_BOARD_IMAGE = object.GUI_BOARD_IMAGE
+
             # Window
             self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
             self.window.set_size_request(object.GUI_WINDOW_X, object.GUI_WINDOW_Y)
@@ -378,6 +254,7 @@ class GUI(object):
             self.window.show()
             self.hbox = gtk.HBox(False, 0)
             self.window.add(self.hbox)
+
             # Buttons
             self.hbox2 = gtk.HBox(False, 0)
             self.vbox = gtk.VBox(False, 0)
@@ -415,6 +292,7 @@ class GUI(object):
             self.camera_img.show()
             self.vbox2.add(self.camera_img)
             self.vbox.show()
+
             # Board Image
             self.board_bgr = cv2.imread(object.GUI_BOARD_IMAGE)
             self.board_pix = gtk.gdk.pixbuf_new_from_array(self.board_bgr, gtk.gdk.COLORSPACE_RGB, 8)
@@ -433,38 +311,15 @@ class GUI(object):
             gtk.main_iteration_do(False)
     
     ## Draw Board
-    def draw_board(self, robot_position, x=75, y=132, x_pad=154, y_pad=40, brown=(116,60,12), yellow=(219,199,6), green=(0,255,0), tall=7, short=2):
+    def draw_board(self, picker_position, delivery_position, x=75, y=132, x_pad=154, y_pad=40, brown=(116,60,12), yellow=(219,199,6), green=(0,255,0), tall=7, short=2):
         try:
             board_bgr = cv2.imread(self.GUI_BOARD_IMAGE)
             (W,H,D) = board_bgr.shape
-            (row_num, at_plant, pass_num, at_end) = robot_position
 
-            # Robot
-            if at_end == 0:
-                if row_num == 0: # if at beginning
-                    (center_x, center_y) = (W - 55, H - 55) ## 55, 55 is best
-                elif at_plant != 0:  # if at plant
-                    if pass_num == 1:
-                        (center_x, center_y) = (W - (at_plant) * x - 77, H - (row_num - 1) * y - 110)
-                    elif pass_num == 2:
-                        (center_x, center_y) = (W - (6 - at_plant) * x - 77, H - (row_num - 1) * y - 110)
-                elif pass_num == 2: # unaligned post-turn
-                    (center_x, center_y) = (W - 470, H - (row_num - 1) * y - 110) 
-                elif row_num >= 1: # unaligned post-jump
-                    (center_x, center_y) = (W - 130, H - (row_num - 1) * y - 110) 
-                elif row_num > 4: # to finish
-                    (center_x, center_y) = (W - 130, H - (row_num - 1) * y - 110)
-                else: # somewhere after plant
-                    (center_x, center_y) = (W - 470, H - (row_num - 1) * y - 110)
-            elif at_end == 1:
-                (center_x, center_y) = (W - 110, H - (row_num-1) * y - 110) # right side at row
-            elif at_end == 2:
-                (center_x, center_y) = (W - 500, H - (row_num-1) * y - 110) # left side at some row  
-            else:
-                (center_x, center_y) = (W - 55, H - 55)          
-            top_left = ((center_x - 20), (center_y - 20))
-            bottom_right = ((center_x + 20), (center_y + 20 ))
-            cv2.rectangle(board_bgr, top_left, bottom_right, (255,0,0), thickness=5)
+            # Picker Robot
+            #!TODO
+            
+            # Delivery Robot
 
             self.board_pix = gtk.gdk.pixbuf_new_from_array(board_bgr, gtk.gdk.COLORSPACE_RGB, 8)
             self.board_img.set_from_pixbuf(self.board_pix)
@@ -480,6 +335,7 @@ class GUI(object):
             self.camera_img.set_from_pixbuf(self.camera_pix)
         except Exception as e:
             print str(e)
+
 # Main
 if __name__ == '__main__':
     server = Server(CONFIG_PATH)
