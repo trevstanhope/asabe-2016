@@ -202,7 +202,6 @@ void loop() {
 }
 
 /* --- Actions --- */
-// Grab Green
 int grab_green(void) {
   for (int i = MICROSERVO_MIN; i < MICROSERVO_MAX + 50; i++) {
     pwm.setPWM(ARM_EXTENSION_SERVO, 0, i);   // Grab block
@@ -216,7 +215,6 @@ int grab_green(void) {
   return 0;
 }
 
-// Grab Yellow
 int grab_yellow(void) {
   for (int i = MICROSERVO_MIN; i < MICROSERVO_MAX + 50; i++) {
     pwm.setPWM(ARM_EXTENSION_SERVO, 0, i);   // Grab block
@@ -230,7 +228,6 @@ int grab_yellow(void) {
   return 0;
 }
 
-// Wait
 int wait(void) {
   pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_MAX);
   delay(WAIT_INTERVAL);
@@ -241,6 +238,7 @@ int forward_jump(int value) {
   set_wheel_servos(15, -15, 15, -15);
   delay(value);
   set_wheel_servos(0, 0, 0, 0);
+  return 0;
 }
 
 int forward_seek(void) {
@@ -249,18 +247,21 @@ int forward_seek(void) {
     delay(20);
   }
   set_wheel_servos(0, 0, 0, 0);
+  return 0;
 }
 
 int pivot_right(int value) {
   set_wheel_servos(15, 15, 15, 15);
   delay(value);
   set_wheel_servos(0, 0, 0, 0);
+  return 0;
 }
 
 int pivot_left(int value) {
   set_wheel_servos(-15, -15, -15, -15);
   delay(value);
   set_wheel_servos(0, 0, 0, 0);
+  return 0;
 }
 
 int align(void) {
@@ -307,5 +308,6 @@ int align(void) {
     delay(50);
   }
   set_wheel_servos(0, 0, 0, 0); // Halt
+  return 0;
 }
 
