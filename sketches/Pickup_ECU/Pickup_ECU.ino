@@ -4,6 +4,18 @@
 #include <RunningMedian.h>
 #include <math.h>
 
+/* --- Prototypes --- */
+int align(void);
+int grab_green(int);
+int grab_yellow(int);
+int wait(void);
+int forward_jump(int);
+int forward_seek(int);
+int pivot_right(int);
+int pivot_left(int);
+void set_wheel_servos(int, int, int, int);
+int find_offset(void);
+
 /* --- Time Constants --- */
 const int WAIT_INTERVAL = 100;
 const int BEGIN_INTERVAL = 2000;
@@ -250,8 +262,6 @@ int pivot_left(int value) {
   delay(value);
   set_wheel_servos(0, 0, 0, 0);
 }
-
-int approach_ball(void) {}
 
 int align(void) {
   /*
