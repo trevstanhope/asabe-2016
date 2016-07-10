@@ -15,16 +15,14 @@ int pivot_right(int);
 int pivot_left(int);
 void set_wheel_servos(int, int, int, int);
 int find_offset(void);
+int transfer(void);
 
 /* --- Time Constants --- */
 const int WAIT_INTERVAL = 100;
-const int BEGIN_INTERVAL = 2000;
 const int TURN45_INTERVAL = 1000;
 const int TURN90_INTERVAL = 3000;
-const int GRAB_INTERVAL = 1000;
-const int TAP_INTERVAL = 500;
-const int STEP_INTERVAL = 2400; // interval to move fully into finishing square
-const int HALFSTEP_INTERVAL = 1100; // interval to move fully into finishing square
+const int ARM_LIFT_DELAY = 2000;
+const int ARM_EXTENSION_DELAY = 4000;
 
 /* --- Serial / Commands --- */
 const int BAUD = 9600;
@@ -48,7 +46,7 @@ const int P                     = 'P';
 const int Q                     = 'Q';
 const int PIVOT_RIGHT_COMMAND   = 'R';
 const int SEEK_COMMAND          = 'S';
-const int T                     = 'T';
+const int TRANSFER_COMMAND      = 'T';
 const int U                     = 'U';
 const int V                     = 'V';
 const int WAIT_COMMAND          = 'W';
@@ -76,17 +74,22 @@ const int FRONT_LEFT_WHEEL_SERVO = 0;
 const int FRONT_RIGHT_WHEEL_SERVO = 1;
 const int BACK_LEFT_WHEEL_SERVO = 2;
 const int BACK_RIGHT_WHEEL_SERVO = 3;
-const int ARM_EXTENSION_SERVO = 4;
-const int ARM_MOTION_SERVO = 5;
-const int SORTING_GATE_SERVO = 6;
-const int REAR_GATE_SERVO = 7;
+const int ARM_EXTENSION_ACTUATOR = 4;
+const int ARM_LIFT_HEAVYSERVO = 5;
+const int SORTING_GATE_MICROSERVO = 6;
+const int REAR_GATE_MICROSERVO = 7;
 
 // PWM Settings
+// Servo limit values are the pulse length count (out of 4096)
 const int MICROSERVO_MIN = 150;
-const int MICROSERVO_ZERO = 225; // this is the servo off pulse length
-const int MICROSERVO_MAX =  600; // this is the 'maximum' pulse length count (out of 4096)
+const int MICROSERVO_ZERO =  300;
+const int MICROSERVO_MAX =  600;
 const int SERVO_MIN = 300;
-const int SERVO_MAX =  460; // this is the 'maximum' pulse length count (out of 4096)
+const int SERVO_MAX =  460; 
+const int HEAVYSERVO_MIN = 300;
+const int HEAVYSERVO_MAX =  460;
+const int ACTUATOR_MIN = 300;
+const int ACTUATOR_MAX = 460;
 const int PWM_FREQ = 60; // analog servos run at 60 Hz
 const int SERVO_SLOW = 20;
 const int SERVO_SPEED = 15;
@@ -156,11 +159,10 @@ void setup() {
   pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, FRONT_RIGHT_ZERO);
   pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, BACK_LEFT_ZERO);
   pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, BACK_RIGHT_ZERO);
-  pwm.setPWM(SORTING_GATE_SERVO, 0, MICROSERVO_MAX); // it's fixed rotation, not continous
-  pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_MAX); // it's fixed rotation, not continous
-  pwm.setPWM(ARM_MOTION_SERVO, 0, MICROSERVO_MAX); // it's fixed rotation, not continous
-  pwm.setPWM(REAR_GATE_SERVO, 0, MICROSERVO_MAX); // it's fixed rotation, not continous
-
+  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MIN);
+  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MAX);
+  pwm.setPWM(REAR_GATE_MICROSERVO, 0, MICROSERVO_MAX);
+  pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
 }
 
 /* --- Loop --- */
@@ -203,33 +205,31 @@ void loop() {
 
 /* --- Actions --- */
 int grab_green(void) {
-  for (int i = MICROSERVO_MIN; i < MICROSERVO_MAX + 50; i++) {
-    pwm.setPWM(ARM_EXTENSION_SERVO, 0, i);   // Grab block
-  }
-  pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_MAX - 100 );
-  delay(TAP_INTERVAL);
-  pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_MAX);
-  delay(TAP_INTERVAL);
-  pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_ZERO);
-  delay(GRAB_INTERVAL);
+  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX); 
+  delay(ARM_LIFT_DELAY);
+  pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
+  delay(ARM_EXTENSION_DELAY);
+  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MAX); // Sets gate to green
+  pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MIN);
+  delay(ARM_EXTENSION_DELAY);
+  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MIN); 
+  delay(ARM_LIFT_DELAY);
   return 0;
 }
 
 int grab_yellow(void) {
-  for (int i = MICROSERVO_MIN; i < MICROSERVO_MAX + 50; i++) {
-    pwm.setPWM(ARM_EXTENSION_SERVO, 0, i);   // Grab block
-  }
-  pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_MAX - 100 );
-  delay(TAP_INTERVAL);
-  pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_MAX);
-  delay(TAP_INTERVAL);
-  pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_ZERO);
-  delay(GRAB_INTERVAL);
-  return 0;
+  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX); 
+  delay(ARM_LIFT_DELAY);
+  pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
+  delay(ARM_EXTENSION_DELAY);
+  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MAX); // Sets gate to yellow
+  pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MIN);
+  delay(ARM_EXTENSION_DELAY);
+  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MIN); 
+  delay(ARM_LIFT_DELAY);
 }
 
 int wait(void) {
-  pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_MAX);
   delay(WAIT_INTERVAL);
   return 0;
 }
@@ -309,5 +309,9 @@ int align(void) {
   }
   set_wheel_servos(0, 0, 0, 0); // Halt
   return 0;
+}
+
+int transfer(void) {
+  pwm.setPWM(REAR_GATE_MICROSERVO, 0, MICROSERVO_ZERO);
 }
 
