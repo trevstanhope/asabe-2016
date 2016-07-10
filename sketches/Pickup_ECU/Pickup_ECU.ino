@@ -10,7 +10,7 @@ int grab_green(int);
 int grab_yellow(int);
 int wait(void);
 int forward_jump(int);
-int forward_seek(int);
+int forward_seek(void);
 int pivot_right(int);
 int pivot_left(int);
 void set_wheel_servos(int, int, int, int);
