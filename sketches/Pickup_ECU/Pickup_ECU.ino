@@ -17,12 +17,12 @@ const int HALFSTEP_INTERVAL = 1100; // interval to move fully into finishing squ
 /* --- Serial / Commands --- */
 const int BAUD = 9600;
 const int OUTPUT_LENGTH = 256;
-const int AL                    = 'A';
+const int ALIGN_COMMAND         = 'A';
 const int B                     = 'B';
 const int C                     = 'C';
 const int D                     = 'D';
 const int E                     = 'E';
-const int F                     = 'F';
+const int FORWARD_JUMP_COMMAND  = 'F';
 const int GREEN_GRAB_COMMAND    = 'G';
 const int H                     = 'H';
 const int I                     = 'I';
@@ -34,8 +34,8 @@ const int N                     = 'N';
 const int O                     = 'O';
 const int P                     = 'P';
 const int Q                     = 'Q';
-const int R                     = 'R';
-const int S                     = 'S';
+const int PIVOT_RIGHT_COMMAND   = 'R';
+const int SEEK_COMMAND          = 'S';
 const int T                     = 'T';
 const int U                     = 'U';
 const int V                     = 'V';
@@ -59,29 +59,29 @@ const int CENTER_LINE_PIN = A1;
 /* --- PWM Servos --- */
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
 
-// Channels
+// Servo Channels
 const int FRONT_LEFT_WHEEL_SERVO = 0;
 const int FRONT_RIGHT_WHEEL_SERVO = 1;
 const int BACK_LEFT_WHEEL_SERVO = 2;
 const int BACK_RIGHT_WHEEL_SERVO = 3;
 const int ARM_EXTENSION_SERVO = 4;
-const int SORTING_GATE_SERVO = 5;
-const int REAR_GATE_SERVO = 6;
+const int ARM_MOTION_SERVO = 5;
+const int SORTING_GATE_SERVO = 6;
+const int REAR_GATE_SERVO = 7;
 
 // PWM Settings
 const int MICROSERVO_MIN = 150;
 const int MICROSERVO_ZERO = 225; // this is the servo off pulse length
 const int MICROSERVO_MAX =  600; // this is the 'maximum' pulse length count (out of 4096)
 const int SERVO_MIN = 300;
-const int SERVO_OFF = 381; // this is the servo off pulse length
 const int SERVO_MAX =  460; // this is the 'maximum' pulse length count (out of 4096)
 const int PWM_FREQ = 60; // analog servos run at 60 Hz
 const int SERVO_SLOW = 20;
 const int SERVO_SPEED = 15;
-const int FR = -3;
-const int FL = -3;
-const int BR = -4;
-const int BL = -3;
+const int FRONT_RIGHT_ZERO = 371;
+const int FRONT_LEFT_ZERO = 376;
+const int BACK_RIGHT_ZERO = 371;
+const int BACK_LEFT_ZERO = 375;
 
 /* --- Variables --- */
 char command;
@@ -91,40 +91,34 @@ RunningMedian offset = RunningMedian(OFFSET_SAMPLES);
 /* --- Buffers --- */
 char output[OUTPUT_LENGTH];
 
-
-/* --- Functions --- */
-int find_offset(int threshold) {
+/* --- Helper Functions --- */
+int find_offset(void) {
   int l = analogRead(LEFT_LINE_PIN);
   int c = analogRead(CENTER_LINE_PIN);
   int r = analogRead(RIGHT_LINE_PIN);
   int x;
-  if ((l > threshold) && (c < threshold) && (r < threshold)) {
+  if ((l > LINE_THRESHOLD) && (c < LINE_THRESHOLD) && (r < LINE_THRESHOLD)) {
     x = 2; // very off
   }
-  else if ((l > threshold) && (c > threshold) && (r < threshold)) {
+  else if ((l > LINE_THRESHOLD) && (c > LINE_THRESHOLD) && (r < LINE_THRESHOLD)) {
     x = 1; // midly off
   }
-  else if ((l < threshold) && (c > threshold) && (r < threshold)) {
+  else if ((l < LINE_THRESHOLD) && (c > LINE_THRESHOLD) && (r < LINE_THRESHOLD)) {
     x = 0; // on target
   }
-  else if ((l < threshold) && (c > threshold) && (r > threshold)) {
+  else if ((l < LINE_THRESHOLD) && (c > LINE_THRESHOLD) && (r > LINE_THRESHOLD)) {
     x = -1;  // mildy off
   }
-  else if ((l < threshold) && (c < threshold) && (r > threshold)) {
+  else if ((l < LINE_THRESHOLD) && (c < LINE_THRESHOLD) && (r > LINE_THRESHOLD)) {
     x = -2; // very off
   }
-  else if ((l < threshold) && (c < threshold) && (r < threshold)) {
+  else if ((l < LINE_THRESHOLD) && (c < LINE_THRESHOLD) && (r < LINE_THRESHOLD)) {
     x = -255; // off entirely
   }
-  else if ((l > threshold) && (c > threshold) && (r > threshold)) {
-    x = 255;
-  }
-  else if ((l > threshold) && (c < threshold) && (r > threshold)) {
-    x = 255;
-  }
   else {
-    x = 0;
+    x = 255;
   }
+
   offset.add(x);
   int val = offset.getMedian();
   // Serial.println(val);
@@ -132,10 +126,10 @@ int find_offset(int threshold) {
 }
 
 void set_wheel_servos(int fl, int fr, int bl, int br) {
-  pwm.setPWM(FRONT_LEFT_WHEEL_SERVO, 0, SERVO_OFF + fl + FL);
-  pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + fr + FR);
-  pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + bl + BL);
-  pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + br + BR);
+  pwm.setPWM(FRONT_LEFT_WHEEL_SERVO, 0, fl + FRONT_LEFT_ZERO);
+  pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, fr + FRONT_RIGHT_ZERO);
+  pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, bl + BACK_LEFT_ZERO);
+  pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, br + BACK_RIGHT_ZERO);
 }
 
 /* --- Setup --- */
@@ -146,12 +140,13 @@ void setup() {
   pinMode(LEFT_LINE_PIN, INPUT);
   pwm.begin();
   pwm.setPWMFreq(PWM_FREQ);  // This is the ideal PWM frequency for servos
-  pwm.setPWM(FRONT_LEFT_WHEEL_SERVO, 0, SERVO_OFF + FL);
-  pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + FR);
-  pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + BL);
-  pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + BR);
+  pwm.setPWM(FRONT_LEFT_WHEEL_SERVO, 0, FRONT_LEFT_ZERO);
+  pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, FRONT_RIGHT_ZERO);
+  pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, BACK_LEFT_ZERO);
+  pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, BACK_RIGHT_ZERO);
   pwm.setPWM(SORTING_GATE_SERVO, 0, MICROSERVO_MAX); // it's fixed rotation, not continous
   pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_MAX); // it's fixed rotation, not continous
+  pwm.setPWM(ARM_MOTION_SERVO, 0, MICROSERVO_MAX); // it's fixed rotation, not continous
   pwm.setPWM(REAR_GATE_SERVO, 0, MICROSERVO_MAX); // it's fixed rotation, not continous
 
 }
@@ -160,12 +155,25 @@ void setup() {
 void loop() {
   if (Serial.available() > 0) {
     char command = Serial.read();
+    int value = Serial.parseInt();
     switch (command) {
       case YELLOW_GRAB_COMMAND:
         result = grab_yellow();
         break;
       case GREEN_GRAB_COMMAND:
         result = grab_green();
+        break;
+      case FORWARD_JUMP_COMMAND:
+        result = forward_jump(value);
+        break;
+      case SEEK_COMMAND:
+        result = forward_seek();
+        break;
+      case PIVOT_RIGHT_COMMAND:
+        result = pivot_right(value);
+        break;
+      case ALIGN_COMMAND:
+        result = align();
         break;
       case WAIT_COMMAND:
         result = wait();
@@ -216,3 +224,78 @@ int wait(void) {
   delay(WAIT_INTERVAL);
   return 0;
 }
+
+int forward_jump(int value) {
+  set_wheel_servos(15, -15, 15, -15);
+  delay(value);
+  set_wheel_servos(0, 0, 0, 0);
+}
+
+int forward_seek(void) {
+  set_wheel_servos(15, -15, 15, -15);
+  while (find_offset() == -255) {
+    delay(20);
+  }
+  set_wheel_servos(0, 0, 0, 0);
+}
+
+int pivot_right(int value) {
+  set_wheel_servos(15, 15, 15, 15);
+  delay(value);
+  set_wheel_servos(0, 0, 0, 0);
+}
+
+int pivot_left(int value) {
+  set_wheel_servos(-15, -15, -15, -15);
+  delay(value);
+  set_wheel_servos(0, 0, 0, 0);
+}
+
+int approach_ball(void) {}
+
+int align(void) {
+  /*
+    Aligns robot at end of T.
+
+    1. Wiggle onto line
+    2. Reverse to end of line
+  */
+
+  // Wiggle onto line
+  int x = find_offset();
+  int i = 0;
+  while (i <= 20) {
+    x = find_offset();
+    if (x == 0) {
+      set_wheel_servos(10, -10, 10, -10);
+      i++;
+    }
+    else if (x == -1) {
+      set_wheel_servos(30, 10, 30, 10);
+      i++;
+    }
+    else if (x == -2) {
+      set_wheel_servos(-40, -40, -40, -40);
+      i = 0;
+    }
+    else if (x == 1) {
+      set_wheel_servos(10, -30, 10, -30);
+      i++;
+    }
+    else if (x == 2) {
+      set_wheel_servos(-40, -40, -40, -40);
+      i = 0;
+    }
+    else if (x == -255) {
+      set_wheel_servos(-15, 15, -15, 15);
+      i = 0;
+    }
+    else if (x == 255) {
+      set_wheel_servos(15, -15, 15, -15);
+      i = 0;
+    }
+    delay(50);
+  }
+  set_wheel_servos(0, 0, 0, 0); // Halt
+}
+
