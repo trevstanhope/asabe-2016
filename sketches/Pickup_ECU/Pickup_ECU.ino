@@ -6,8 +6,8 @@
 
 /* --- Prototypes --- */
 int align(void);
-int grab_green(int);
-int grab_yellow(int);
+int grab_green(void);
+int grab_yellow(void);
 int wait(void);
 int forward_jump(int);
 int forward_seek(void);
