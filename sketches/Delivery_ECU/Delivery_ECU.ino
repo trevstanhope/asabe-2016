@@ -182,6 +182,8 @@ int jump(void) {
   while (find_offset() == -255) { 
     delay(WAIT_INTERVAL); // Drive until a line is reached
   }
+  set_wheel_servos(0, 0, 0, 0);
+  return 0;
 }
 
 // 2. Align onto line by wiggling
