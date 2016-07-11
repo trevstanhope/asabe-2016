@@ -214,11 +214,11 @@ int align(void) {
       i++;
     }
     else if (x == -1) {
-      set_wheel_servos(SERVO_MEDIUM, SERVO_SLOW, SERVO_MEDIUM, SERVO_SLOW);
+      set_wheel_servos(SERVO_MEDIUM, -SERVO_SLOW, SERVO_MEDIUM, -SERVO_SLOW);
       i++;
     }
     else if (x == -2) {
-      set_wheel_servos(-SERVO_MEDIUM, -SERVO_FAST, -SERVO_FAST, -SERVO_FAST);
+      set_wheel_servos(SERVO_MEDIUM, -SERVO_FAST, SERVO_FAST, -SERVO_FAST);
       i = 0;
     }
     else if (x == 1) {
