@@ -9,6 +9,7 @@ void set_wheel_servos(int, int, int, int);
 int drop_balls(void);
 int wait(void);
 int follow_line(void);
+int align(void);
 
 /* --- Constants --- */
 // Time 
