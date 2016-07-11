@@ -206,8 +206,8 @@ int align(void) {
   }
   // Wiggle
   int i = 0;
+  int x = line_detect();
   while (i <= 20) {
-    x = line_detect();
     if (x == 0) {
       set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
       i++;
@@ -237,6 +237,7 @@ int align(void) {
       i = 0;
     }
     delay(50);
+    x = line_detect();
   }
   set_wheel_servos(0, 0, 0, 0); // Halt 
   return 0;
