@@ -56,8 +56,8 @@ const int MIN_ACTIONS = 25; // was 35
 
 // I/O Pins
 const int LEFT_LINE_PIN = A0;
-const int RIGHT_LINE_PIN = A2;
 const int CENTER_LINE_PIN = A1;
+const int RIGHT_LINE_PIN = A2;
 // A4 - A5 reserved
 
 // Channels
@@ -216,7 +216,7 @@ int align(void) {
       i++;
     }
     else if (x == -2) {
-      set_wheel_servos(SERVO_MEDIUM, -SERVO_SLOW, SERVO_MEDIUM, -SERVO_SLOW);
+      set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
       i = 0;
     }
     else if (x == 1) {
@@ -224,7 +224,7 @@ int align(void) {
       i++;
     }
     else if (x == 2) {
-      set_wheel_servos(SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM);
+      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
       i = 0;
     }
     else if (x == -255) {
