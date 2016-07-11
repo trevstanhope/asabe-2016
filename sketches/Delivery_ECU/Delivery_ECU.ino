@@ -164,6 +164,9 @@ void loop() {
       case JUMP_COMMAND:
         result = jump();
         break;
+      case SEEK_COMMAND:
+        result
+        break;
       case LINE_COMMAND:
         result = line_detect();
         break;
@@ -198,11 +201,6 @@ int align(void) {
   // Rotate to the right
   set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
   while (line_detect() != -255) {
-    delay(WAIT_INTERVAL);
-  }
-  // Pull onto line
-  set_wheel_servos(SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM);
-  while (line_detect() == 0) {
     delay(WAIT_INTERVAL);
   }
   // Wiggle
