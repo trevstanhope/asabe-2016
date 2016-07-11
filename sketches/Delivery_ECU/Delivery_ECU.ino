@@ -10,6 +10,7 @@ int drop_balls(void);
 int wait(void);
 int follow_line(void);
 int align(void);
+int reverse_to_end(void);
 
 /* --- Constants --- */
 // Time 
@@ -269,7 +270,6 @@ int follow_line(void) {
     delay(50);
   }
   set_wheel_servos(0, 0, 0, 0); // Stop servos
-  return 0;
   return 0;
 }
 
