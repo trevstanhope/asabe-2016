@@ -4,28 +4,30 @@
 #include <math.h>
 
 /* --- Prototypes --- */
-int turn90(void);
+int turn_into_transfer_zone(void);
 void set_wheel_servos(int, int, int, int);
+int drop_balls(void);
 int wait(void);
+int follow_line(void);
 
 /* --- Constants --- */
 // Time 
 const int WAIT_INTERVAL = 100;
-const int BEGIN_INTERVAL = 2000;
+const int JUMP_INTERVAL = 5000;
 
 // Serial Commands
 const int BAUD = 9600;
 const int OUTPUT_LENGTH = 256;
-const int A                     = 'A';
+const int ALIGN_COMMAND         = 'A';
 const int B                     = 'B';
 const int C                     = 'C';
 const int DROP_BALLS_COMMAND    = 'D';
 const int E                     = 'E';
-const int F                     = 'F';
+const int FOLLOW_LINE_COMMAND   = 'F';
 const int G                     = 'G';
 const int H                     = 'H';
 const int I                     = 'I';
-const int J                     = 'J';
+const int JUMP_COMMAND          = 'J';
 const int K                     = 'K';
 const int L                     = 'L';
 const int M                     = 'M';
@@ -33,8 +35,8 @@ const int N                     = 'N';
 const int O                     = 'O';
 const int P                     = 'P';
 const int Q                     = 'Q';
-const int R                     = 'R';
-const int S                     = 'S';
+const int REVERSE_COMMAND       = 'R';
+const int SEEK_COMMAND          = 'S';
 const int TURN_COMMAND          = 'T';
 const int U                     = 'U';
 const int V                     = 'V';
@@ -90,6 +92,36 @@ void set_wheel_servos(int fl, int fr, int bl, int br) {
   pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + bl + BL);
   pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + br + BR);
 }
+
+int find_offset(void) {
+  int l = analogRead(LEFT_LINE_PIN);
+  int c = analogRead(CENTER_LINE_PIN);
+  int r = analogRead(RIGHT_LINE_PIN);
+  int x;
+  if ((l > LINE_THRESHOLD) && (c < LINE_THRESHOLD) && (r < LINE_THRESHOLD)) {
+    x = 2; // very off
+  }
+  else if ((l > LINE_THRESHOLD) && (c > LINE_THRESHOLD) && (r < LINE_THRESHOLD)) {
+    x = 1; // midly off
+  }
+  else if ((l < LINE_THRESHOLD) && (c > LINE_THRESHOLD) && (r < LINE_THRESHOLD)) {
+    x = 0; // on target
+  }
+  else if ((l < LINE_THRESHOLD) && (c > LINE_THRESHOLD) && (r > LINE_THRESHOLD)) {
+    x = -1;  // mildy off
+  }
+  else if ((l < LINE_THRESHOLD) && (c < LINE_THRESHOLD) && (r > LINE_THRESHOLD)) {
+    x = -2; // very off
+  }
+  else if ((l < LINE_THRESHOLD) && (c < LINE_THRESHOLD) && (r < LINE_THRESHOLD)) {
+    x = -255; // off entirely
+  }
+  else {
+    x = 255; // at a T
+  }
+  return x;
+}
+
 /* --- Setup --- */
 void setup() {
   Serial.begin(BAUD);
@@ -103,7 +135,7 @@ void setup() {
   pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + BL);
   pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + BR);
   pwm.setPWM(GREEN_ARM_MICROSERVO, 0, MICROSERVO_MIN);
-  pwm.setPWM(YELLOW_ARM_MICROSERVO, 0, MICROSERVO_MIN);
+  pwm.setPWM(YELLOW_ARM_MICROSERVO, 0, MICROSERVO_MAX);
 }
 
 /* --- Loop --- */
@@ -112,14 +144,23 @@ void loop() {
     char command = Serial.read();
     int value = Serial.parseInt();
     switch (command) {
+      case ALIGN_COMMAND:
+        result = align();
+        break;      
       case TURN_COMMAND:
-        result = turn90();
+        result = turn_into_transfer_zone();
         break;
       case WAIT_COMMAND:
         result = wait();
         break;
       case DROP_BALLS_COMMAND:
         result = drop_balls();
+        break;
+      case JUMP_COMMAND:
+        result = jump();
+        break;
+      case REVERSE_COMMAND:
+        result = reverse_to_end();
         break;
       default:
         result = 255;
@@ -133,16 +174,149 @@ void loop() {
 }
 
 /* --- Actions --- */
+// 1. Jump out of the starting zone to the 2nd line
+int jump(void) {
+  set_wheel_servos(15, -15, 15, -15);
+  delay(JUMP_INTERVAL);
+  while (find_offset() == -255) { 
+    delay(WAIT_INTERVAL); // Drive until a line is reached
+  }
+}
+
+// 2. Align onto line by wiggling
+int align(void) {
+  int x = find_offset();
+  int i = 0;
+  while (i <= 20) {
+    x = find_offset();
+    if (x == 0) {
+      set_wheel_servos(10, -10, 10, -10);
+      i++;
+    }
+    else if (x == -1) {
+      set_wheel_servos(30, 10, 30, 10);
+      i++;
+    }
+    else if (x == -2) {
+      set_wheel_servos(-40, -40, -40, -40);
+      i = 0;
+    }
+    else if (x == 1) {
+      set_wheel_servos(10, -30, 10, -30);
+      i++;
+    }
+    else if (x == 2) {
+      set_wheel_servos(-40, -40, -40, -40);
+      i = 0;
+    }
+    else if (x == -255) {
+      set_wheel_servos(-15, 15, -15, 15);
+      i = 0;
+    }
+    else if (x == 255) {
+      set_wheel_servos(15, -15, 15, -15);
+      i = 0;
+    }
+    delay(50);
+  }
+  set_wheel_servos(0, 0, 0, 0); // Halt 
+}
+
+// 3. Follow line to intersection
+int follow_line(void) {
+  
+  // Prepare for movement
+  int x = find_offset();
+
+  // Search until end
+  if (x == 255) {
+    while (x == 255) {
+      x = find_offset();
+      set_wheel_servos(20, -20, 20, -20);
+    }
+  }
+  while (true)  {
+    x = find_offset();
+    if (x == -1) {
+      set_wheel_servos(30, -20, 30, -20);
+    }
+    else if (x == -2) {
+      set_wheel_servos(20, 20, 20, 20);
+    }
+    else if (x == 1) {
+      set_wheel_servos(20, -30, 20, -30);
+    }
+    else if (x == 2) {
+      set_wheel_servos(-20, -20, -20, -20);
+    }
+    else if (x == 0) {
+      set_wheel_servos(30, -30, 30, -30);
+    }
+    else if (x == 255) {
+      set_wheel_servos(10, -10, 10, -10);
+      delay(500);
+      x = find_offset();
+      if (x == -255) {
+        set_wheel_servos(-10, 10, -10, 10);
+        delay(500);
+        break;
+      }
+    }
+    delay(50);
+  }
+  set_wheel_servos(0, 0, 0, 0); // Stop servos
+  return 0;
+  return 0;
+}
+
+// 4. Turn and enter the transfer zone
+int turn_into_transfer_zone(void) {
+  set_wheel_servos(15, 15, 15, 15);
+  return 0;
+}
+
+// 5. Wait for another action (e.g. transfer) to occur
 int wait(void) {
   delay(WAIT_INTERVAL);
   return 0;
 }
 
-int turn90(void) {
+// 6. Reverse to End
+int reverse_to_end(void) {
+  int x = find_offset();
+  int skipped_intersections = 0;
+  while (skipped_intersections < 2) {
+    delay(WAIT_INTERVAL);
+    x = find_offset();
+    if (x == -1) {
+      set_wheel_servos(-10, 20, -10, 20);
+    }
+    else if (x == -2) {
+      set_wheel_servos(-15, -15, -15, -15);
+    }
+    else if (x == 1) {
+      set_wheel_servos(-20, 10, -20, 10);
+    }
+    else if (x == 2) {
+      set_wheel_servos(15, 15, 15, 15);
+    }
+    else if (x == 0) {
+      set_wheel_servos(-10, 10, -10, 10);
+    }
+    else if (x == -255) {
+      set_wheel_servos(0, 0, 0, 0); // Halt 
+      break;
+    }
+    else if (x == 255) {
+      skipped_intersections++;
+    }
+  }
   return 0;
 }
 
+// 7. Drop Balls
 int drop_balls(void) {
+  pwm.setPWM(GREEN_ARM_MICROSERVO, 0, MICROSERVO_MAX);
+  pwm.setPWM(YELLOW_ARM_MICROSERVO, 0, MICROSERVO_MIN);
   return 0;
 }
-
