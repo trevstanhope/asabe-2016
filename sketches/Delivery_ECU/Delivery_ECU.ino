@@ -80,8 +80,8 @@ const int SERVO_MEDIUM = 20;
 const int SERVO_FAST = 30;
 const int FR = 0;
 const int FL = 6;
-const int BR = 3;
-const int BL = 0;
+const int BR = 6;
+const int BL = 3;
 
 /* --- Variables --- */
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
