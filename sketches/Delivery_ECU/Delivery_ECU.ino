@@ -180,7 +180,7 @@ void loop() {
 /* --- Actions --- */
 // 1. Jump out of the starting zone to the 2nd line
 int jump(void) {
-  set_wheel_servos(-SERVO_FAST, SERVO_FAST, -SERVO_FAST, SERVO_FAST);
+  set_wheel_servos(SERVO_FAST, -SERVO_FAST, SERVO_FAST, -SERVO_FAST);
   delay(JUMP_INTERVAL);
   while (find_offset() == -255) { 
     delay(WAIT_INTERVAL); // Drive until a line is reached
