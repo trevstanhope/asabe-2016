@@ -1,7 +1,6 @@
 /* --- Libraries --- */
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
-#include <RunningMedian.h>
 #include <math.h>
 
 /* --- Prototypes --- */
@@ -21,8 +20,9 @@ int transfer(void);
 const int WAIT_INTERVAL = 100;
 const int TURN45_INTERVAL = 1000;
 const int TURN90_INTERVAL = 3000;
-const int ARM_LIFT_DELAY = 2000;
-const int ARM_EXTENSION_DELAY = 4000;
+const int ARM_LIFT_DELAY = 500;
+const int ARM_EXTENSION_DELAY = 100;
+const int SORTING_GATE_DELAY = 500;
 
 /* --- Serial / Commands --- */
 const int BAUD = 9600;
@@ -70,24 +70,26 @@ const int CENTER_LINE_PIN = A1;
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
 
 // Servo Channels
+// Bank 1
 const int FRONT_LEFT_WHEEL_SERVO = 0;
 const int FRONT_RIGHT_WHEEL_SERVO = 1;
 const int BACK_LEFT_WHEEL_SERVO = 2;
 const int BACK_RIGHT_WHEEL_SERVO = 3;
-const int ARM_EXTENSION_ACTUATOR = 4;
-const int ARM_LIFT_HEAVYSERVO = 5;
-const int SORTING_GATE_MICROSERVO = 6;
-const int REAR_GATE_MICROSERVO = 7;
+// Bank 2
+const int SORTING_GATE_MICROSERVO = 5;
+const int REAR_GATE_MICROSERVO = 4;
+const int ARM_LIFT_HEAVYSERVO = 6;
+const int ARM_EXTENSION_ACTUATOR = 7;
 
 // PWM Settings
 // Servo limit values are the pulse length count (out of 4096)
-const int MICROSERVO_MIN = 150;
+const int MICROSERVO_MIN = 180;
 const int MICROSERVO_ZERO =  300;
-const int MICROSERVO_MAX =  600;
+const int MICROSERVO_MAX =  520;
 const int SERVO_MIN = 300;
 const int SERVO_MAX =  460; 
 const int HEAVYSERVO_MIN = 300;
-const int HEAVYSERVO_MAX =  460;
+const int HEAVYSERVO_MAX =  550;
 const int ACTUATOR_MIN = 300;
 const int ACTUATOR_MAX = 460;
 const int PWM_FREQ = 60; // analog servos run at 60 Hz
@@ -101,7 +103,6 @@ const int BACK_LEFT_ZERO = 375;
 /* --- Variables --- */
 char command;
 int result;
-RunningMedian offset = RunningMedian(OFFSET_SAMPLES);
 
 /* --- Buffers --- */
 char output[OUTPUT_LENGTH];
@@ -133,11 +134,7 @@ int find_offset(void) {
   else {
     x = 255;
   }
-
-  offset.add(x);
-  int val = offset.getMedian();
-  // Serial.println(val);
-  return val;
+  return x;
 }
 
 void set_wheel_servos(int fl, int fr, int bl, int br) {
@@ -192,6 +189,9 @@ void loop() {
       case WAIT_COMMAND:
         result = wait();
         break;
+      case TRANSFER_COMMAND:
+        result = transfer();
+        break;
       default:
         result = 255;
         command = UNKNOWN_COMMAND;
@@ -205,11 +205,11 @@ void loop() {
 
 /* --- Actions --- */
 int grab_green(void) {
+  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MAX); // Sets gate to green
   pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX); 
   delay(ARM_LIFT_DELAY);
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
   delay(ARM_EXTENSION_DELAY);
-  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MAX); // Sets gate to green
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MIN);
   delay(ARM_EXTENSION_DELAY);
   pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MIN); 
@@ -218,11 +218,11 @@ int grab_green(void) {
 }
 
 int grab_yellow(void) {
+  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MIN); // Sets gate to yellow
   pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX); 
   delay(ARM_LIFT_DELAY);
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
   delay(ARM_EXTENSION_DELAY);
-  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MAX); // Sets gate to yellow
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MIN);
   delay(ARM_EXTENSION_DELAY);
   pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MIN); 
