@@ -80,7 +80,7 @@ const int SERVO_MEDIUM = 20;
 const int SERVO_FAST = 30;
 const int FR = 0;
 const int FL = 6;
-const int BR = 6;
+const int BR = 7;
 const int BL = 3;
 
 /* --- Variables --- */
