@@ -218,7 +218,7 @@ int align(void) {
       i++;
     }
     else if (x == -2) {
-      set_wheel_servos(SERVO_MEDIUM, -SERVO_FAST, SERVO_FAST, -SERVO_FAST);
+      set_wheel_servos(SERVO_FAST, -SERVO_MEDIUM, SERVO_FAST, -SERVO_MEDIUM);
       i = 0;
     }
     else if (x == 1) {
@@ -226,7 +226,7 @@ int align(void) {
       i++;
     }
     else if (x == 2) {
-      set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
+      set_wheel_servos(SERVO_MEDIUM, -SERVO_FAST, SERVO_MEDIUM, -SERVO_FAST);
       i = 0;
     }
     else if (x == -255) {
@@ -234,7 +234,9 @@ int align(void) {
       i = 0;
     }
     else if (x == 255) {
-      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
+      while (line_detect() == 255) {
+        set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
+      }
       i = 0;
     }
     delay(WAIT_INTERVAL);
