@@ -78,10 +78,10 @@ const int PWM_FREQ = 60; // analog servos run at 60 Hz
 const int SERVO_SLOW = 10;
 const int SERVO_MEDIUM = 20;
 const int SERVO_FAST = 30;
-const int FR = 15;
-const int FL = 15;
-const int BR = 15;
-const int BL = 15;
+const int FR = -15;
+const int FL = -15;
+const int BR = -15;
+const int BL = -15;
 
 /* --- Variables --- */
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
