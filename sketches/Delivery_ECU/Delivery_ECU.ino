@@ -11,6 +11,7 @@ int wait(void);
 int follow_line(void);
 int align(void);
 int reverse_to_end(void);
+int jump(void);
 
 /* --- Constants --- */
 // Time 
