@@ -194,7 +194,17 @@ int jump(void) {
 
 // 2. Align onto line by wiggling
 int align(void) {
-  int x = line_detect();
+  // Rotate to the right
+  set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
+  while (line_detect() != -255) {
+    delay(WAIT_INTERVAL);
+  }
+  // Pull onto line
+  set_wheel_servos(SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM);
+  while (line_detect() == -255) {
+    delay(WAIT_INTERVAL);
+  }
+  // Wiggle
   int i = 0;
   while (i <= 20) {
     x = line_detect();
@@ -207,7 +217,7 @@ int align(void) {
       i++;
     }
     else if (x == -2) {
-      set_wheel_servos(-SERVO_FAST, -SERVO_FAST, -SERVO_FAST, -SERVO_FAST);
+      set_wheel_servos(-SERVO_MEDIUM, -SERVO_FAST, -SERVO_FAST, -SERVO_FAST);
       i = 0;
     }
     else if (x == 1) {
