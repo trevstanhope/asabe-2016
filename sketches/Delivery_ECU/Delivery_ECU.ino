@@ -164,9 +164,6 @@ void loop() {
       case JUMP_COMMAND:
         result = jump();
         break;
-      case SEEK_COMMAND:
-        result
-        break;
       case LINE_COMMAND:
         result = line_detect();
         break;
