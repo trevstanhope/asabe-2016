@@ -79,9 +79,9 @@ const int PWM_FREQ = 60; // analog servos run at 60 Hz
 const int SERVO_SLOW = 10;
 const int SERVO_MEDIUM = 20;
 const int SERVO_FAST = 30;
-const int FR = 0;
+const int FR = 3;
 const int FL = 8;
-const int BR = 9;
+const int BR = 10;
 const int BL = 3;
 
 /* --- Variables --- */
