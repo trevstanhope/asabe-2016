@@ -221,6 +221,7 @@ int align(void) {
     delay(50);
   }
   set_wheel_servos(0, 0, 0, 0); // Halt 
+  return 0;
 }
 
 // 3. Follow line to intersection
