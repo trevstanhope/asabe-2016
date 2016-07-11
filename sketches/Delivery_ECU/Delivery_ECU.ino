@@ -4,7 +4,7 @@
 #include <math.h>
 
 /* --- Prototypes --- */
-int turn(void);
+int turn90(void);
 void set_wheel_servos(int, int, int, int);
 int wait(void);
 
@@ -102,8 +102,8 @@ void setup() {
   pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + FR);
   pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + BL);
   pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + BR);
-  pwm.setPWM(GREEN_ARM_MICROSERVO, 0, MICROSERVO_OFF);
-  pwm.setPWM(YELLOW_ARM_MICROSERVO, 0, MICROSERVO_OFF);
+  pwm.setPWM(GREEN_ARM_MICROSERVO, 0, MICROSERVO_MIN);
+  pwm.setPWM(YELLOW_ARM_MICROSERVO, 0, MICROSERVO_MIN);
 }
 
 /* --- Loop --- */
@@ -113,7 +113,7 @@ void loop() {
     int value = Serial.parseInt();
     switch (command) {
       case TURN_COMMAND:
-        result = turn();
+        result = turn90();
         break;
       case WAIT_COMMAND:
         result = wait();
@@ -138,13 +138,11 @@ int wait(void) {
   return 0;
 }
 
-int turn(int amount) {
+int turn90(void) {
   return 0;
 }
 
 int drop_balls(void) {
   return 0;
 }
-}
-
 
