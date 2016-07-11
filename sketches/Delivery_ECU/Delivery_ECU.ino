@@ -12,6 +12,7 @@ int follow_line(void);
 int align(void);
 int reverse_to_end(void);
 int jump(void);
+int line_detect(void);
 
 /* --- Constants --- */
 // Time 
@@ -196,12 +197,12 @@ int jump(void) {
 int align(void) {
   // Rotate to the right
   set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
-  while (line_detect() != 0) {
+  while (line_detect() != -255) {
     delay(WAIT_INTERVAL);
   }
   // Pull onto line
   set_wheel_servos(SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM);
-  while (line_detect() == -255) {
+  while (line_detect() == 0) {
     delay(WAIT_INTERVAL);
   }
   // Wiggle
