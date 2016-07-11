@@ -3,23 +3,23 @@
 #include <Adafruit_PWMServoDriver.h>
 #include <math.h>
 
-/* --- Time Constants --- */
+/* --- Prototypes --- */
+int turn(void);
+void set_wheel_servos(int, int, int, int);
+int wait(void);
+
+/* --- Constants --- */
+// Time 
 const int WAIT_INTERVAL = 100;
 const int BEGIN_INTERVAL = 2000;
-const int TURN45_INTERVAL = 1000;
-const int TURN90_INTERVAL = 3000;
-const int GRAB_INTERVAL = 1000;
-const int TAP_INTERVAL = 500;
-const int STEP_INTERVAL = 2400; // interval to move fully into finishing square
-const int HALFSTEP_INTERVAL = 1100; // interval to move fully into finishing square
 
-/* --- Serial / Commands --- */
+// Serial Commands
 const int BAUD = 9600;
 const int OUTPUT_LENGTH = 256;
 const int A                     = 'A';
 const int B                     = 'B';
 const int C                     = 'C';
-const int D                     = 'D';
+const int DROP_BALLS_COMMAND    = 'D';
 const int E                     = 'E';
 const int F                     = 'F';
 const int G                     = 'G';
@@ -40,23 +40,19 @@ const int U                     = 'U';
 const int V                     = 'V';
 const int WAIT_COMMAND          = 'W';
 const int X                     = 'X';
-const int YELLOW_GRAB_COMMAND   = 'Y';
+const int Y                     = 'Y';
 const int Z                     = 'Z';
 const int UNKNOWN_COMMAND       = '?';
 
-/* --- Constants --- */
 const int LINE_THRESHOLD = 500; // i.e. 2.5 volts
 const int OFFSET_SAMPLES = 1;
 const int MIN_ACTIONS = 25; // was 35
 
-/* --- I/O Pins --- */
+// I/O Pins
 const int LEFT_LINE_PIN = A0;
 const int RIGHT_LINE_PIN = A2;
 const int CENTER_LINE_PIN = A1;
 // A4 - A5 reserved
-
-/* --- PWM Servos --- */
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
 
 // Channels
 const int FRONT_LEFT_WHEEL_SERVO = 0;
@@ -82,13 +78,18 @@ const int BR = -4;
 const int BL = -3;
 
 /* --- Variables --- */
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
 char command;
 int result;
-RunningMedian offset = RunningMedian(OFFSET_SAMPLES);
-
-/* --- Buffers --- */
 char output[OUTPUT_LENGTH];
 
+/* --- Helper Functions --- */
+void set_wheel_servos(int fl, int fr, int bl, int br) {
+  pwm.setPWM(FRONT_LEFT_WHEEL_SERVO, 0, SERVO_OFF + fl + FL);
+  pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + fr + FR);
+  pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + bl + BL);
+  pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + br + BR);
+}
 /* --- Setup --- */
 void setup() {
   Serial.begin(BAUD);
@@ -101,27 +102,24 @@ void setup() {
   pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + FR);
   pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + BL);
   pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + BR);
-  pwm.setPWM(SORTING_GATE_SERVO, 0, MICROSERVO_MAX); // it's fixed rotation, not continous
-  pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_MAX); // it's fixed rotation, not continous
-  pwm.setPWM(REAR_GATE_SERVO, 0, MICROSERVO_MAX); // it's fixed rotation, not continous
-
+  pwm.setPWM(GREEN_ARM_MICROSERVO, 0, MICROSERVO_OFF);
+  pwm.setPWM(YELLOW_ARM_MICROSERVO, 0, MICROSERVO_OFF);
 }
 
 /* --- Loop --- */
 void loop() {
   if (Serial.available() > 0) {
     char command = Serial.read();
+    int value = Serial.parseInt();
     switch (command) {
       case TURN_COMMAND:
         result = turn();
         break;
-      case REPEAT_COMMAND:
-        break;
       case WAIT_COMMAND:
         result = wait();
         break;
-      case CLEAR_COMMAND:
-        result = wait();
+      case DROP_BALLS_COMMAND:
+        result = drop_balls();
         break;
       default:
         result = 255;
@@ -136,18 +134,17 @@ void loop() {
 
 /* --- Actions --- */
 int wait(void) {
-  pwm.setPWM(ARM_EXTENSION_SERVO, 0, MICROSERVO_MAX);
   delay(WAIT_INTERVAL);
   return 0;
 }
 
-void set_wheel_servos(int fl, int fr, int bl, int br) {
-  pwm.setPWM(FRONT_LEFT_WHEEL_SERVO, 0, SERVO_OFF + fl + FL);
-  pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + fr + FR);
-  pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + bl + BL);
-  pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + br + BR);
+int turn(int amount) {
+  return 0;
 }
 
-
+int drop_balls(void) {
+  return 0;
+}
+}
 
 
