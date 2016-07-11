@@ -75,12 +75,13 @@ const int SERVO_MIN = 300;
 const int SERVO_OFF = 381; // this is the servo off pulse length
 const int SERVO_MAX =  460; // this is the 'maximum' pulse length count (out of 4096)
 const int PWM_FREQ = 60; // analog servos run at 60 Hz
-const int SERVO_SLOW = 20;
-const int SERVO_SPEED = 15;
-const int FR = 3;
-const int FL = 3;
-const int BR = 3;
-const int BL = 3;
+const int SERVO_SLOW = 10;
+const int SERVO_MEDIUM = 20;
+const int SERVO_FAST = 30;
+const int FR = 15;
+const int FL = 15;
+const int BR = 15;
+const int BL = 15;
 
 /* --- Variables --- */
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
@@ -179,7 +180,7 @@ void loop() {
 /* --- Actions --- */
 // 1. Jump out of the starting zone to the 2nd line
 int jump(void) {
-  set_wheel_servos(15, -15, 15, -15);
+  set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
   delay(JUMP_INTERVAL);
   while (find_offset() == -255) { 
     delay(WAIT_INTERVAL); // Drive until a line is reached
@@ -195,31 +196,31 @@ int align(void) {
   while (i <= 20) {
     x = find_offset();
     if (x == 0) {
-      set_wheel_servos(10, -10, 10, -10);
+      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
       i++;
     }
     else if (x == -1) {
-      set_wheel_servos(30, 10, 30, 10);
+      set_wheel_servos(SERVO_MEDIUM, SERVO_SLOW, SERVO_MEDIUM, SERVO_SLOW);
       i++;
     }
     else if (x == -2) {
-      set_wheel_servos(-40, -40, -40, -40);
+      set_wheel_servos(-SERVO_FAST, -SERVO_FAST, -SERVO_FAST, -SERVO_FAST);
       i = 0;
     }
     else if (x == 1) {
-      set_wheel_servos(10, -30, 10, -30);
+      set_wheel_servos(SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM);
       i++;
     }
     else if (x == 2) {
-      set_wheel_servos(-40, -40, -40, -40);
+      set_wheel_servos(-SERVO_FAST, -SERVO_FAST, -SERVO_FAST, -SERVO_FAST);
       i = 0;
     }
     else if (x == -255) {
-      set_wheel_servos(-15, 15, -15, 15);
+      set_wheel_servos(-SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW);
       i = 0;
     }
     else if (x == 255) {
-      set_wheel_servos(15, -15, 15, -15);
+      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
       i = 0;
     }
     delay(50);
@@ -238,7 +239,7 @@ int follow_line(void) {
   if (x == 255) {
     while (x == 255) {
       x = find_offset();
-      set_wheel_servos(20, -20, 20, -20);
+      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
     }
   }
   while (true)  {
@@ -276,7 +277,7 @@ int follow_line(void) {
 
 // 4. Turn and enter the transfer zone
 int turn_into_transfer_zone(void) {
-  set_wheel_servos(15, 15, 15, 15);
+  set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
   return 0;
 }
 
@@ -297,13 +298,13 @@ int reverse_to_end(void) {
       set_wheel_servos(-10, 20, -10, 20);
     }
     else if (x == -2) {
-      set_wheel_servos(-15, -15, -15, -15);
+      set_wheel_servos(-SERVO_SLOW, -SERVO_SLOW, -SERVO_SLOW, -SERVO_SLOW);
     }
     else if (x == 1) {
       set_wheel_servos(-20, 10, -20, 10);
     }
     else if (x == 2) {
-      set_wheel_servos(15, 15, 15, 15);
+      set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
     }
     else if (x == 0) {
       set_wheel_servos(-10, 10, -10, 10);
