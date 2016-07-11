@@ -196,7 +196,7 @@ int jump(void) {
 int align(void) {
   // Rotate to the right
   set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
-  while (line_detect() != -255) {
+  while (line_detect() != 0) {
     delay(WAIT_INTERVAL);
   }
   // Pull onto line
