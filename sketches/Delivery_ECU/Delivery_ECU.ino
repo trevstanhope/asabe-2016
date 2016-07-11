@@ -32,7 +32,7 @@ const int H                     = 'H';
 const int I                     = 'I';
 const int JUMP_COMMAND          = 'J';
 const int K                     = 'K';
-const int L                     = 'L';
+const int LINE_COMMAND          = 'L';
 const int M                     = 'M';
 const int N                     = 'N';
 const int O                     = 'O';
@@ -97,7 +97,7 @@ void set_wheel_servos(int fl, int fr, int bl, int br) {
   pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + br + BR);
 }
 
-int find_offset(void) {
+int line_detect(void) {
   int l = analogRead(LEFT_LINE_PIN);
   int c = analogRead(CENTER_LINE_PIN);
   int r = analogRead(RIGHT_LINE_PIN);
@@ -163,6 +163,9 @@ void loop() {
       case JUMP_COMMAND:
         result = jump();
         break;
+      case LINE_COMMAND:
+        result = line_detect();
+        break;
       case REVERSE_COMMAND:
         result = reverse_to_end();
         break;
@@ -182,7 +185,7 @@ void loop() {
 int jump(void) {
   set_wheel_servos(SERVO_FAST, -SERVO_FAST, SERVO_FAST, -SERVO_FAST);
   delay(JUMP_INTERVAL);
-  while (find_offset() == -255) { 
+  while (line_detect() == -255) { 
     delay(WAIT_INTERVAL); // Drive until a line is reached
   }
   set_wheel_servos(0, 0, 0, 0);
@@ -191,10 +194,10 @@ int jump(void) {
 
 // 2. Align onto line by wiggling
 int align(void) {
-  int x = find_offset();
+  int x = line_detect();
   int i = 0;
   while (i <= 20) {
-    x = find_offset();
+    x = line_detect();
     if (x == 0) {
       set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
       i++;
@@ -233,17 +236,17 @@ int align(void) {
 int follow_line(void) {
   
   // Prepare for movement
-  int x = find_offset();
+  int x = line_detect();
 
   // Search until end
   if (x == 255) {
     while (x == 255) {
-      x = find_offset();
+      x = line_detect();
       set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
     }
   }
   while (true)  {
-    x = find_offset();
+    x = line_detect();
     if (x == -1) {
       set_wheel_servos(30, -20, 30, -20);
     }
@@ -262,7 +265,7 @@ int follow_line(void) {
     else if (x == 255) {
       set_wheel_servos(10, -10, 10, -10);
       delay(500);
-      x = find_offset();
+      x = line_detect();
       if (x == -255) {
         set_wheel_servos(-10, 10, -10, 10);
         delay(500);
@@ -289,11 +292,11 @@ int wait(void) {
 
 // 6. Reverse to End
 int reverse_to_end(void) {
-  int x = find_offset();
+  int x = line_detect();
   int skipped_intersections = 0;
   while (skipped_intersections < 2) {
     delay(WAIT_INTERVAL);
-    x = find_offset();
+    x = line_detect();
     if (x == -1) {
       set_wheel_servos(-10, 20, -10, 20);
     }
