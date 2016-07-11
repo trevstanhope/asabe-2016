@@ -77,10 +77,10 @@ const int SERVO_MAX =  460; // this is the 'maximum' pulse length count (out of 
 const int PWM_FREQ = 60; // analog servos run at 60 Hz
 const int SERVO_SLOW = 20;
 const int SERVO_SPEED = 15;
-const int FR = -3;
-const int FL = -3;
-const int BR = -4;
-const int BL = -3;
+const int FR = -8;
+const int FL = -8;
+const int BR = -8;
+const int BL = -8;
 
 /* --- Variables --- */
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
