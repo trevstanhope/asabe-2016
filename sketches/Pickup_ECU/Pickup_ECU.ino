@@ -365,7 +365,7 @@ int transfer(void) {
       set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
     }
     else if (x == 0) {
-      set_wheel_servos(SERVO_FAST, -SERVO_FAST, SERVO_FAST, -SERVO_FAST);
+      set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
     }
     else if (x == 255) {
       break;
