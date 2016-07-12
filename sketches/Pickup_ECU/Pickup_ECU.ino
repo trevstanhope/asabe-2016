@@ -372,7 +372,11 @@ int transfer(void) {
       break;
     }
     else if (x == -255) {
-      set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
+      set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
+      while (line_detect() == -255) {
+        delay(1)
+      }
+      set_wheel_servos(0,0,0,0);
     }
     delay(50);
   }
