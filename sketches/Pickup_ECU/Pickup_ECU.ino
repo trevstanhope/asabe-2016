@@ -355,7 +355,7 @@ int transfer(void) {
     if (x == -2) {
       set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
     }
-    elif (x == -1) {
+    else if (x == -1) {
       set_wheel_servos(-SERVO_MEDIUM, SERVO_FAST, -SERVO_MEDIUM, SERVO_FAST);
     }
     else if (x == 0) {
