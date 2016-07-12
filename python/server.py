@@ -221,7 +221,6 @@ class Server:
         orange_mask = cv2.dilate(orange_mask, None, iterations=2)
         orange_bgr = np.dstack((np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8), orange_mask, orange_mask)) # set self.mask to be accessed by the GUI
         green_bgr = np.dstack((np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8), green_mask, np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8))) # set self.mask to be accessed by the GUI
-        self.mask = orange_bgr + green_bgr
         detected_balls = []
 
         # Green Contours
@@ -233,15 +232,11 @@ class Server:
                 k = cv2.isContourConvex(c)
                 area = cv2.contourArea(c)
                 estimated_area = np.pi * radius ** 2.0
-                if estimated_area <= 1.5 * area:
-                    M = cv2.moments(c)
-                    center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+                if abs(estimated_area - area) / estimated_area < 0.5:
                     if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
                         detected_balls.append((x,y,radius,'green'))
-                    elif (radius < RADIUS_MIN):
-                        self.pretty_print("CV2", "Rejecting circles which are too small!")
-                    elif (radius < RADIUS_MAX):
-                        self.pretty_print("CV2", "Rejecting circles which are too large!")
+                    else:
+                        cv2.putText(green_bgr, 'X', (int(x)-10,int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
                 else:
                     self.pretty_print("CV2", "Rejecting circles for being too unfilled")
         # Orange Contours
@@ -253,34 +248,37 @@ class Server:
                 k = cv2.isContourConvex(c)
                 area = cv2.contourArea(c)
                 estimated_area = np.pi * radius ** 2.0
-                if estimated_area <= 1.5 * area:
-                    M = cv2.moments(c)
-                    center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))        
+                if abs(estimated_area - area) / estimated_area < 0.2:
                     if (radius >= RADIUS_MIN) and (radius <= RADIUS_MAX): # only proceed if the radius meets a minimum size
                         detected_balls.append((x,y,radius,'orange'))
-                    elif (radius < RADIUS_MIN):
-                        self.pretty_print("CV2", "Rejecting circles which are too small!")
-                    elif (radius < RADIUS_MAX):
-                        self.pretty_print("CV2", "Rejecting circles which are too large!")
+                    else:
+                        cv2.putText(orange_bgr, 'X', (int(x)-10,int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
                 else:
                     self.pretty_print("CV2", "Rejecting circles for being too unfilled")
         # Draw
         if len(detected_balls) > 0:
             for x,y,r,color in detected_balls:
+                d = self.estimate_distance(y,r)
                 if color == 'green':
-                    cv2.circle(bgr, (int(x), int(y)), int(radius), (0, 255, 0), 2)
+                    cv2.circle(bgr, (int(x), int(y)), int(r), (0, 255, 0), 2)
+                    cv2.putText(bgr, str(d), (int(x)+10,int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
                 if color == 'orange':
-                    cv2.circle(bgr, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+                    cv2.circle(bgr, (int(x), int(y)), int(r), (0, 255, 255), 2)
+                    cv2.putText(bgr, str(d), (int(x)+10,int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
             x,y,r,c = max(detected_balls) # return the farthest to the right, use min() for left
             cv2.circle(bgr, (int(x),int(y)), 3, (0, 0, 255), -1)
             self.bgr = bgr # set BGR of GUI with the updated, drawn-on version
-            heading = int(x - self.CAMERA_WIDTH / 2)
-            distance = r # estimate the distance
+            self.mask = orange_bgr + green_bgr
+            heading = 50 * int(x - self.CAMERA_WIDTH / 2)
+            distance = self.estimate_distance(y,r)
             return heading, distance, color
         else:
             self.bgr = bgr
+            self.mask = orange_bgr + green_bgr
             return None, None, None
- 
+    def estimate_distance(self, y, r):
+        return int(30 - r)
+
     ### CherryPy Server Functions ###
     def __init_tasks__(self):
         if self.VERBOSE: self.pretty_print('CHERRYPY', 'Initializing Monitors ...')
