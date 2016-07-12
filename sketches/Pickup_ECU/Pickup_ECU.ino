@@ -103,6 +103,7 @@ const int FRONT_RIGHT_ZERO = 371;
 const int FRONT_LEFT_ZERO = 376;
 const int BACK_RIGHT_ZERO = 370;
 const int BACK_LEFT_ZERO = 375;
+const int BACKUP_CORRECTION = 5;
 
 /* --- Variables --- */
 char command;
@@ -342,7 +343,7 @@ int align(void) {
 }
 
 int backup(int value) {
-  set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_SLOW, SERVO_SLOW);
+  set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_SLOW + BACKUP_CORRECTION), SERVO_SLOW);
   delay(value);
   set_wheel_servos(0, 0, 0, 0);
   return 0;
