@@ -298,7 +298,7 @@ int align(void) {
       i++;
     }
     else if (x == -1) {
-      set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
+      set_wheel_servos(SERVO_FAST, -SERVO_MEDIUM, SERVO_FAST, -SERVO_MEDIUM);
       i++;
     }
     else if (x == -2) {
@@ -306,7 +306,7 @@ int align(void) {
       i = 0;
     }
     else if (x == 1) {
-      set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);      
+      set_wheel_servos(SERVO_MEDIUM, -SERVO_FAST, SERVO_MEDIUM, -SERVO_FAST);      
       i++;
     }
     else if (x == 2) {
