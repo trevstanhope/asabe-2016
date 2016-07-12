@@ -88,7 +88,7 @@ const int MICROSERVO_MIN = 180;
 const int MICROSERVO_ZERO =  300;
 const int MICROSERVO_MAX =  520;
 const int SERVO_MIN = 300;
-const int SERVO_MAX =  460; 
+const int SERVO_MAX =  460;
 const int HEAVYSERVO_MIN = 300;
 const int HEAVYSERVO_MAX =  550;
 const int ACTUATOR_MIN = 300;
@@ -224,26 +224,26 @@ void loop() {
 /* --- Actions --- */
 int grab_green(void) {
   pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MAX); // Sets gate to green
-  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX); 
+  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX);
   delay(ARM_LIFT_DELAY);
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
   delay(ARM_EXTENSION_DELAY);
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MIN);
   delay(ARM_EXTENSION_DELAY);
-  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MIN); 
+  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MIN);
   delay(ARM_LIFT_DELAY);
   return 0;
 }
 
 int grab_yellow(void) {
   pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MIN); // Sets gate to yellow
-  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX); 
+  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX);
   delay(ARM_LIFT_DELAY);
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
   delay(ARM_EXTENSION_DELAY);
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MIN);
   delay(ARM_EXTENSION_DELAY);
-  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MIN); 
+  pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MIN);
   delay(ARM_LIFT_DELAY);
 }
 
@@ -293,14 +293,51 @@ int align(void) {
   delay(500);
   set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
   while (true) {
-    if (line_detect() == 0) { break; }
+    if (line_detect() == 0) {
+      break;
+    }
     delay(20);
   }
-  set_wheel_servos(0, 0, 0, 0);
+  int x = line_detect();
+  int i = 0;
+  while (i <= 5) {
+    if (x == 0) {
+      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
+      i++;
+    }
+    else if (x == -1) {
+      set_wheel_servos(SERVO_MEDIUM, -SERVO_SLOW, SERVO_MEDIUM, -SERVO_SLOW);
+      i++;
+    }
+    else if (x == -2) {
+      set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
+      i = 0;
+    }
+    else if (x == 1) {
+      set_wheel_servos(SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM);
+      i++;
+    }
+    else if (x == 2) {
+      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
+      i = 0;
+    }
+    else if (x == -255) {
+      set_wheel_servos(-SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW);
+      i = 0;
+    }
+    else if (x == 255) {
+      while (line_detect() == 255) {
+        set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
+      }
+      i = 0;
+    }
+    delay(WAIT_INTERVAL);
+  }
+  delay(50);
   return 0;
 }
 
-int backup(int value) { 
+int backup(int value) {
   set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
   delay(value);
   set_wheel_servos(0, 0, 0, 0);
