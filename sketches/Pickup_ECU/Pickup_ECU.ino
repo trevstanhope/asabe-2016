@@ -349,6 +349,7 @@ int backup(int value) {
 }
 
 int transfer(void) {
+  int x;
   while (true)  {
     x = line_detect();
     if (x == -1) {
