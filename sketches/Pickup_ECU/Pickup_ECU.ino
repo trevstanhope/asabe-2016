@@ -295,7 +295,7 @@ int align(void) {
   */
   // Advance a small distance
   set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
-  delay(500);
+  delay(1000);
   set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
   while (true) {
     if (line_detect() == 0) {
