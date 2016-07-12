@@ -354,19 +354,19 @@ int transfer(void) {
   while (true)  {
     x = line_detect();
     if (x == -2) {
-      set_wheel_servos(SERVO_SLOW, -SERVO_FAST, SERVO_SLOW, -SERVO_FAST);
+      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
     }
     else if (x == -1) {
-      set_wheel_servos(SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM);
+      set_wheel_servos(-SERVO_SLOW, SERVO_FAST, -SERVO_SLOW, SERVO_FAST);
     }
     else if (x == 0) {
       set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
     }
     else if (x == 1) {
-      set_wheel_servos(SERVO_MEDIUM, -SERVO_SLOW, SERVO_MEDIUM, -SERVO_SLOW);
+      set_wheel_servos(-SERVO_FAST, SERVO_SLOW, -SERVO_FAST, SERVO_SLOW);
     }
     else if (x == 2) {
-      set_wheel_servos(SERVO_FAST, -SERVO_SLOW, SERVO_FAST, -SERVO_SLOW);
+      set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
     }
     else if (x == 255) {
       break;
@@ -374,7 +374,7 @@ int transfer(void) {
     else if (x == -255) {
       set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
       while (line_detect() == -255) {
-        delay(1)
+        delay(1);
       }
       set_wheel_servos(0,0,0,0);
     }
