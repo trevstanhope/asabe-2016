@@ -370,6 +370,9 @@ int transfer(void) {
     else if (x == 255) {
       break;
     }
+    else if (x == -255) {
+      set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
+    }
     delay(50);
   }
   set_wheel_servos(0, 0, 0, 0); // Stop servos
