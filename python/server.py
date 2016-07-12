@@ -106,6 +106,7 @@ class Server:
         self.start_time = time.time()
         self.end_time = self.start_time + self.RUN_TIME
         self.clock = self.end_time - self.start_time
+        self.balls_collected = 0
     def decide_action(self, request):
         """
         Below is the Pseudocode for how the decisions are made:
@@ -116,6 +117,8 @@ class Server:
         
         if request['robot'] == 'picker':
             heading, distance, color = self.find_ball(np.array(request['bgr'], np.uint8))
+            if (heading is not None) and (distance is not None) and (color is not None):
+                self.pretty_print("DECIDE", "Heading: %d, Distance: %d, Color: %s" % (heading, distance, color))
 
         ## If paused
         if self.running == False:
@@ -125,11 +128,31 @@ class Server:
         ## If running
         elif self.clock > 0: 
             
-            ## Picker
+            ## Picker 
             if request['robot'] == 'picker':
                 if request['last_action'] == 'Z':
-                    action = 'J' 
+                    action = 'F' 
+                elif (request['last_action'] == 'F') or (request['last_action'] == 'L') or (request['last_action'] == 'R'):
+                    if distance < self.TARGET_DISTANCE:
+                        if color == 'green':
+                            action == 'G'
+                        elif color == 'orange':
+                            action == 'O'
+                    elif heading < 0:
+                        action = 'L'
+                    elif heading > 0:
+                        action = 'R'
+                    else:
+                        action = 'F'
                 elif request['last_action'] == 'G' or request['last_action'] == 'O':
+                    action = 'W'
+                elif request['last_action'] == 'B':
+                    action = 'W'
+                elif request['last_action'] == 'T':
+                    action = 'W'
+                elif request['last_action'] == 'J':
+                    action = 'W'
+                elif request['last_action'] == 'A':
                     action = 'W'
                 elif request['last_action'] == '?':
                     action = '?'
@@ -173,7 +196,11 @@ class Server:
         return action
 
     ### Computer Vision ###
-    def find_ball(self, bgr):
+    def find_ball(self, bgr,
+                        RADIUS_MIN=10, RADIUS_MAX=160,
+                        GREEN_LOWER = (29, 64, 32), GREEN_UPPER = (90, 255, 255),
+                        ORANGE_LOWER = (5, 64, 32), ORANGE_UPPER = (40, 255, 255)
+        ):
         """
         Find the contours for both masks, then use these
         to compute the minimum enclosing circle and centroid
@@ -181,27 +208,22 @@ class Server:
             color : green, yellow
             pos: heading, distance, color
         """
-        greenLower = (29, 64, 32)
-        greenUpper = (90, 255, 255)
-        orangeLower = (5, 64, 32)
-        orangeUpper = (40, 255, 255)
-        RADIUS_MIN = 20
-        RADIUS_MAX = 160
+
+
         if self.VERBOSE: self.pretty_print("CV2", "Searching for ball ...")
         blurred = cv2.GaussianBlur(bgr, (11, 11), 0)
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-        green_mask = cv2.inRange(hsv, greenLower, greenUpper)
+        green_mask = cv2.inRange(hsv, GREEN_LOWER, GREEN_UPPER)
         green_mask = cv2.erode(green_mask, None, iterations=2)
         green_mask = cv2.dilate(green_mask, None, iterations=2)
-        orange_mask = cv2.inRange(hsv, orangeLower, orangeUpper)
+        orange_mask = cv2.inRange(hsv, ORANGE_LOWER, ORANGE_UPPER)
         orange_mask = cv2.erode(orange_mask, None, iterations=2)
         orange_mask = cv2.dilate(orange_mask, None, iterations=2)
-        
         orange_bgr = np.dstack((np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8), orange_mask, orange_mask)) # set self.mask to be accessed by the GUI
         green_bgr = np.dstack((np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8), green_mask, np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8))) # set self.mask to be accessed by the GUI
         self.mask = orange_bgr + green_bgr
-
         detected_balls = []
+
         # Green Contours
         green_contours = cv2.findContours(green_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
         center = None # initialize the current (x, y) center of the ball
@@ -216,6 +238,12 @@ class Server:
                     center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
                     if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
                         detected_balls.append((x,y,radius,'green'))
+                    elif (radius < RADIUS_MIN):
+                        self.pretty_print("CV2", "Rejecting circles which are too small!")
+                    elif (radius < RADIUS_MAX):
+                        self.pretty_print("CV2", "Rejecting circles which are too large!")
+                else:
+                    self.pretty_print("CV2", "Rejecting circles for being too unfilled")
         # Orange Contours
         orange_contours = cv2.findContours(orange_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
         center = None # initialize the current (x, y) center of the ball
@@ -228,8 +256,14 @@ class Server:
                 if estimated_area <= 1.5 * area:
                     M = cv2.moments(c)
                     center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))        
-                    if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
+                    if (radius >= RADIUS_MIN) and (radius <= RADIUS_MAX): # only proceed if the radius meets a minimum size
                         detected_balls.append((x,y,radius,'orange'))
+                    elif (radius < RADIUS_MIN):
+                        self.pretty_print("CV2", "Rejecting circles which are too small!")
+                    elif (radius < RADIUS_MAX):
+                        self.pretty_print("CV2", "Rejecting circles which are too large!")
+                else:
+                    self.pretty_print("CV2", "Rejecting circles for being too unfilled")
         # Draw
         if len(detected_balls) > 0:
             for x,y,r,color in detected_balls:
@@ -238,7 +272,7 @@ class Server:
                 if color == 'orange':
                     cv2.circle(bgr, (int(x), int(y)), int(radius), (0, 255, 255), 2)
             x,y,r,c = max(detected_balls) # return the farthest to the right, use min() for left
-            cv2.circle(bgr, (int(x),int(y)), 5, (0, 0, 255), -1)
+            cv2.circle(bgr, (int(x),int(y)), 3, (0, 0, 255), -1)
             self.bgr = bgr # set BGR of GUI with the updated, drawn-on version
             heading = int(x - self.CAMERA_WIDTH / 2)
             distance = r # estimate the distance
@@ -406,7 +440,7 @@ class GUI(object):
     ## Draw Board
     def draw_board(self, picker_position, delivery_position, x=75, y=132, x_pad=154, y_pad=40, brown=(116,60,12), yellow=(219,199,6), green=(0,255,0), tall=7, short=2):
         try:
-            board_bgr = cv2.imread(self.GUI_BOARD_IMAGE)
+            board_bgr = cv2.cvtColor(cv2.imread(self.GUI_BOARD_IMAGE), cv2.COLOR_BGR2RGB)
             (W,H,D) = board_bgr.shape
 
             # Picker Robot

@@ -41,7 +41,7 @@ const int H                     = 'H';
 const int I                     = 'I';
 const int J                     = 'J';
 const int K                     = 'K';
-const int L                     = 'L';
+const int PIVOT_LEFT_COMMAND    = 'L';
 const int M                     = 'M';
 const int N                     = 'N';
 const int O                     = 'O';
@@ -180,6 +180,9 @@ void loop() {
         break;
       case PIVOT_RIGHT_COMMAND:
         result = pivot_right(value);
+        break;
+      case PIVOT_LEFT_COMMAND:
+        result = pivot_left(value);
         break;
       case ALIGN_COMMAND:
         result = align();

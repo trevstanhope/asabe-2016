@@ -24,5 +24,6 @@
     "GUI_CAMERA_IMAGE" : "static/camera_320x240.jpg",
     "GUI_WINDOW_X" : 1000,
     "GUI_WINDOW_Y" : 700,
-    "GUI_LABEL_CLOCK" : "Seconds Remaining: %d"
+    "GUI_LABEL_CLOCK" : "Seconds Remaining: %d",
+    "TARGET_DISTANCE" : 5
 }
