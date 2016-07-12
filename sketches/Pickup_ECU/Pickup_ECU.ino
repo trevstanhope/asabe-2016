@@ -23,7 +23,7 @@ int zero(void);
 const int WAIT_INTERVAL = 100;
 const int TURN45_INTERVAL = 1000;
 const int TURN90_INTERVAL = 3000;
-const int ARM_LIFT_DELAY = 500;
+const int ARM_LIFT_DELAY = 2000;
 const int ARM_EXTENSION_DELAY = 100;
 const int SORTING_GATE_DELAY = 500;
 
