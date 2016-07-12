@@ -24,7 +24,7 @@ int jump(void);
 /* --- Constants --- */
 // Time intevals
 const int WAIT_INTERVAL = 100;
-const int TURN30_INTERVAL = 1000;
+const int TURN30_INTERVAL = 500;
 const int TURN60_INTERVAL = 3000;
 const int TURN90_INTERVAL = 4000;
 const int SWEEP45_INTERVAL = 3500;
