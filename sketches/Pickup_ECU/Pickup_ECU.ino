@@ -13,10 +13,12 @@ int forward_seek(void);
 int pivot_right(int);
 int pivot_left(int);
 void set_wheel_servos(int, int, int, int);
-int find_offset(void);
+int line_detect(void);
 int transfer(void);
+int backup(void);
 
-/* --- Time Constants --- */
+/* --- Constants --- */
+// Time intevals
 const int WAIT_INTERVAL = 100;
 const int TURN45_INTERVAL = 1000;
 const int TURN90_INTERVAL = 3000;
@@ -24,11 +26,11 @@ const int ARM_LIFT_DELAY = 500;
 const int ARM_EXTENSION_DELAY = 100;
 const int SORTING_GATE_DELAY = 500;
 
-/* --- Serial / Commands --- */
+// Serial Commands
 const int BAUD = 9600;
 const int OUTPUT_LENGTH = 256;
 const int ALIGN_COMMAND         = 'A';
-const int B                     = 'B';
+const int BACKUP_COMMAND        = 'B';
 const int C                     = 'C';
 const int D                     = 'D';
 const int E                     = 'E';
@@ -52,22 +54,16 @@ const int V                     = 'V';
 const int WAIT_COMMAND          = 'W';
 const int X                     = 'X';
 const int YELLOW_GRAB_COMMAND   = 'Y';
-const int Z                     = 'Z';
+const int ZERO_COMMAND          = 'Z';
 const int UNKNOWN_COMMAND       = '?';
 
-/* --- Constants --- */
+// Line Tracking
 const int LINE_THRESHOLD = 500; // i.e. 2.5 volts
 const int OFFSET_SAMPLES = 1;
-const int MIN_ACTIONS = 25; // was 35
-
-/* --- I/O Pins --- */
 const int LEFT_LINE_PIN = A0;
 const int RIGHT_LINE_PIN = A2;
 const int CENTER_LINE_PIN = A1;
 // A4 - A5 reserved
-
-/* --- PWM Servos --- */
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
 
 // Servo Channels
 // Bank 1
@@ -103,12 +99,13 @@ const int BACK_LEFT_ZERO = 375;
 /* --- Variables --- */
 char command;
 int result;
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
 
 /* --- Buffers --- */
 char output[OUTPUT_LENGTH];
 
 /* --- Helper Functions --- */
-int find_offset(void) {
+int line_detect(void) {
   int l = analogRead(LEFT_LINE_PIN);
   int c = analogRead(CENTER_LINE_PIN);
   int r = analogRead(RIGHT_LINE_PIN);
@@ -192,6 +189,9 @@ void loop() {
       case TRANSFER_COMMAND:
         result = transfer();
         break;
+      case ZERO_COMMAND:
+        result = zero();
+        break;
       default:
         result = 255;
         command = UNKNOWN_COMMAND;
@@ -243,7 +243,7 @@ int forward_jump(int value) {
 
 int forward_seek(void) {
   set_wheel_servos(15, -15, 15, -15);
-  while (find_offset() == -255) {
+  while (line_detect() == -255) {
     delay(20);
   }
   set_wheel_servos(0, 0, 0, 0);
@@ -273,10 +273,10 @@ int align(void) {
   */
 
   // Wiggle onto line
-  int x = find_offset();
+  int x = line_detect();
   int i = 0;
   while (i <= 20) {
-    x = find_offset();
+    x = line_detect();
     if (x == 0) {
       set_wheel_servos(10, -10, 10, -10);
       i++;
@@ -311,7 +311,17 @@ int align(void) {
   return 0;
 }
 
+int backup(void) { 
+  
+  return 0;
+}
+
 int transfer(void) {
   pwm.setPWM(REAR_GATE_MICROSERVO, 0, MICROSERVO_ZERO);
+}
+
+int zero(void) {
+  setup();
+  return 0;
 }
 
