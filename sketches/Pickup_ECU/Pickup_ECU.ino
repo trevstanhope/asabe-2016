@@ -352,20 +352,20 @@ int transfer(void) {
   int x;
   while (true)  {
     x = line_detect();
-    if (x == -1) {
-      set_wheel_servos(-SERVO_FAST, SERVO_MEDIUM, -SERVO_FAST, SERVO_MEDIUM);
-    }
-    else if (x == -2) {
+    if (x == -2) {
       set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
     }
-    else if (x == 1) {
+    elif (x == -1) {
       set_wheel_servos(-SERVO_MEDIUM, SERVO_FAST, -SERVO_MEDIUM, SERVO_FAST);
-    }
-    else if (x == 2) {
-      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
     }
     else if (x == 0) {
       set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
+    }
+    else if (x == 1) {
+      set_wheel_servos(-SERVO_FAST, SERVO_MEDIUM, -SERVO_FAST, SERVO_MEDIUM);
+    }
+    else if (x == 2) {
+      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
     }
     else if (x == 255) {
       break;
