@@ -204,6 +204,10 @@ class Server:
             color : green, yellow
             pos: heading, distance, color
         """
+        GREEN_LOWER = (self.GREEN_MIN, self.SAT_MIN, self.VAL_MIN)
+        GREEN_UPPER = (self.GREEN_MAX, self.SAT_MAX, self.VAL_MAX) 
+        ORANGE_LOWER = (self.ORANGE_MIN, self.SAT_MIN, self.VAL_MIN) 
+        ORANGE_UPPER = (self.ORANGE_MAX, self.SAT_MAX, self.VAL_MAX)
 
         if self.VERBOSE: self.pretty_print("CV2", "Searching for ball ...")
         blurred = cv2.GaussianBlur(bgr, (25, 25), 0)

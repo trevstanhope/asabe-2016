@@ -8,7 +8,7 @@
     "CHERRYPY_REFRESH_INTERVAL" : 0.1,
     "ZMQ_HOST" : "tcp://*:1980",
     "ZMQ_ADDR" : "tcp://192.168.0.101:1980",
-    "ZMQ_TIMEOUT" : 10000,
+    "ZMQ_TIMEOUT" : 30000,
     "TIME_FORMAT" : "%Y-%m-%d %H:%M:%S",
     "RUN_TIME" : 300,
     "ARDUINO_DEV" : ["/dev/ttyACM", "/dev/ttyUSB"],
