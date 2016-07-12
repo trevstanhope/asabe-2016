@@ -32,13 +32,13 @@ from random import randint
 try:
     CONFIG_PATH = sys.argv[1]
 except Exception as err:
-    print "NO CONFIGURATION FILE GIVEN"
-    exit(1)
+    print "Using default config file"
+    CONFIG_PATH = 'settings.json'
 
 # CherryPy3 server
 class Server:
     
-    ## Initialize
+    ### Initialize ###
     def __init__(self, config_path):
         
         # Configuration
@@ -50,7 +50,7 @@ class Server:
         self.__init_statemachine__()
         self.__init_gui__()
 
-    ## Useful Functions
+    ### Useful Functions ###
     def pretty_print(self, task, msg):
         """ Pretty Print """ 
         date = datetime.strftime(datetime.now(), '%d/%b/%Y:%H:%M:%S')
@@ -66,7 +66,7 @@ class Server:
                 except AttributeError as error:
                     setattr(self, key, settings[key])
        
-    ## ZMQ Functions
+    ### ZMQ Functions ###
     def __init_zmq__(self):      
         if self.VERBOSE: self.pretty_print('ZMQ', 'Initializing ZMQ')
         try:
@@ -98,35 +98,34 @@ class Server:
         except Exception as error:
             self.pretty_print('ZMQ', str(error))   
     
-    ## State-Machine Functions
+    ### State-Machine Functions ###
     def __init_statemachine__(self):
         self.bgr = cv2.imread(self.GUI_CAMERA_IMAGE)
         self.running = False
         self.start_time = time.time()
         self.end_time = self.start_time + self.RUN_TIME
         self.clock = self.end_time - self.start_time
-
     def decide_action(self, request):
         """
         Below is the Pseudocode for how the decisions are made:
-
         start()
         """
         self.pretty_print("DECIDE", "Last Action: %s" % request['last_action'])
         self.pretty_print("DECIDE", "Robot: %s" % request['robot'])
+        x,y,r,c = self.find_ball(np.array(request['bgr'], np.uint8))
 
         ## If paused
         if self.running == False:
             if request['last_action'] == 'clear':
-                action = 'wait'
+                action = 'W'
             else:
-                action = 'clear'
+                action = 'W'
         ## If running
         elif self.clock > 0: 
             if request['robot'] == 'picker':
-                action = 'wait'
+                action = 'W'
             elif request['robot'] == 'delivery':
-                action = 'wait'
+                action = 'W'
             else:
                 raise Exception("Unrecgnized robot identifier!")
         ## If times is up
@@ -134,40 +133,80 @@ class Server:
             action = 'end'
         return action
 
+    ### Computer Vision ###
     def find_ball(self, bgr):
         """
+        Find the contours for both masks, then use these
+        to compute the minimum enclosing circle and centroid
         Returns:
             color : green, yellow
             pos: x, y, z
         """
+        greenLower = (29, 64, 32)
+        greenUpper = (90, 255, 255)
+        orangeLower = (5, 64, 32)
+        orangeUpper = (40, 255, 255)
+        RADIUS_MIN = 20
+        RADIUS_MAX = 160
         if self.VERBOSE: self.pretty_print("CV2", "Searching for ball ...")
-        try:
-            # Blur image
-            bgr = cv2.medianBlur(bgr, 5)
+        blurred = cv2.GaussianBlur(bgr, (11, 11), 0)
+        hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+        green_mask = cv2.inRange(hsv, greenLower, greenUpper)
+        green_mask = cv2.erode(green_mask, None, iterations=2)
+        green_mask = cv2.dilate(green_mask, None, iterations=2)
+        orange_mask = cv2.inRange(hsv, orangeLower, orangeUpper)
+        orange_mask = cv2.erode(orange_mask, None, iterations=2)
+        orange_mask = cv2.dilate(orange_mask, None, iterations=2)
+        detected_balls = []
+        # Green Contours
+        green_contours = cv2.findContours(green_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+        center = None # initialize the current (x, y) center of the ball
+        if len(green_contours) > 0: # only proceed if at least one contour was found
+            for c in green_contours:
+                ((x, y), radius) = cv2.minEnclosingCircle(c)
+                M = cv2.moments(c)
+                center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+                if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
+                    detected_balls.append((x,y,radius,'green'))
+        # Orange Contours
+        orange_contours = cv2.findContours(orange_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+        center = None # initialize the current (x, y) center of the ball
+        if len(orange_contours) > 0: # only proceed if at least one contour was found
+            for c in orange_contours:
+                ((x, y), radius) = cv2.minEnclosingCircle(c)
+                M = cv2.moments(c)
+                center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))        
+                if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
+                    detected_balls.append((x,y,radius,'orange'))
+        # Draw
 
-        except Exception as e:
-            self.pretty_print("CV", "ERROR: %s" % str(e))
-            color = None
-            (x,y,z) = (None, None, None)
-        return color, (x,y,z)
+        if len(detected_balls) > 0:
+            for x,y,r,c in detected_balls:
+                if c == 'green':
+                    cv2.circle(bgr, (int(x), int(y)), int(radius), (0, 255, 0), 2)
+                if c == 'orange':
+                    cv2.circle(bgr, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+            x,y,r,c = max(detected_balls) # return the farthest to the right, use min() for left
+            cv2.circle(bgr, (int(x),int(y)), 5, (0, 0, 255), -1)
+            self.bgr = bgr
+            return x,y,r,c
+        else:
+            return None, None, None, None
  
-    ## CherryPy Functions
+    ### CherryPy Server Functions ###
     def __init_tasks__(self):
-        if self.VERBOSE: self.pretty_print('CHERRYPY', 'Initializing Monitors')
+        if self.VERBOSE: self.pretty_print('CHERRYPY', 'Initializing Monitors ...')
         try:
             Monitor(cherrypy.engine, self.listen, frequency=self.CHERRYPY_LISTEN_INTERVAL).subscribe()
             Monitor(cherrypy.engine, self.refresh, frequency=self.CHERRYPY_REFRESH_INTERVAL).subscribe()
         except Exception as error:
             self.pretty_print('CHERRYPY', str(error))
-
     def listen(self):
         """ Listen for Next Sample """
         if self.VERBOSE: self.pretty_print('CHERRYPY', 'Listening for nodes ...')
         req = self.receive_request()
-        self.bgr = np.array(req['bgr'], np.uint8)
         action = self.decide_action(req)
         resp = self.send_response(action)
-
     def refresh(self):
         """ Update the GUI """
         if self.VERBOSE: self.pretty_print('CHERRYPY', 'Updating GUI ...')
@@ -182,13 +221,11 @@ class Server:
         else:
             self.end_time = time.time() + self.clock         
         self.gui.update_gui(self.clock)
-
     @cherrypy.expose
     def index(self):
         """ Render index page """
         html = open('static/index.html').read()
         return html
-
     @cherrypy.expose
     def default(self, *args, **kwargs):
         """
@@ -196,38 +233,34 @@ class Server:
         This function is basically the RESTful API
         """
         try:
-
             pass
         except Exception as err:
             self.pretty_print('ERROR', str(err))
         return None
 
-    ## GUI Functions
+    ### GUI Functions ###
     def __init_gui__(self):
-        if self.VERBOSE: self.pretty_print('GUI', 'Initializing GUI')
+        if self.VERBOSE: self.pretty_print('GUI', 'Initializing GUI ...')
         try:
             self.gui = GUI(self)
             self.running= False
         except Exception as error:
             self.pretty_print('GUI', str(error))
-
     def run(self, object):
         self.pretty_print("GUI", "Running session ...")
         self.running = True
-
     def stop(self, object):
         self.pretty_print("GUI", "Halting session ...")
         self.running = False
-
     def reset(self, object):
         self.pretty_print("GUI", "Resetting to start ...")
         self.__init_statemachine__() # reset values
-
     def close(self, widget, window):
         try:
             gtk.main_quit()
         except Exception as e:
             self.pretty_print('GUI', 'Console server is still up (CTRL-C to exit)')
+
 # Display
 class GUI(object):
 
@@ -320,6 +353,7 @@ class GUI(object):
             #!TODO
             
             # Delivery Robot
+            #!TODO
 
             self.board_pix = gtk.gdk.pixbuf_new_from_array(board_bgr, gtk.gdk.COLORSPACE_RGB, 8)
             self.board_img.set_from_pixbuf(self.board_pix)

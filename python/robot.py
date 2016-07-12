@@ -17,19 +17,11 @@ from datetime import datetime
 from serial import Serial, SerialException
 import cv2, cv
 import thread
+import socket
 
 # Constants
-try:
-    CONFIG_PATH = sys.argv[1]
-except Exception as err:
-    print "No CONFIG_PATH given!"
-    exit(1)
-
-try:
-    ROBOT_TYPE = sys.argv[2]
-except Exception as err:
-    print "No ROBOT_TYPE given!"
-    exit(1)
+CONFIG_PATH = 'settings.json' 
+ROBOT_TYPE = socket.gethostname().split('-')[0]
 
 # Robot
 class Robot:
@@ -129,7 +121,7 @@ class Robot:
     def request_action(self, status):
         if self.VERBOSE: self.pretty_print('ZMQ', 'Requesting action from server ...')
         try:
-            last_action = [key for key, value in self.ACTIONS.iteritems() if value == status['command']][0]
+            last_action = status['command']
             bgr = self.bgr
             request = {
                 'type' : 'request',
@@ -177,8 +169,6 @@ class Robot:
                     time.sleep(wait)
                 except ValueError as e:
                     self.pretty_print('CTRL', 'Error: %s (%s)' % (str(e), string))
-                    self.pretty_print("CTRL", "Requesting repeat of last command ...")
-                    self.arduino.write(str(self.ACTIONS['repeat'])) # send command
                     time.sleep(wait)
             self.pretty_print("CTRL", "Status: %s" % status)
             self.last_action = action

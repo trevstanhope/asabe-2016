@@ -24,19 +24,5 @@
     "GUI_CAMERA_IMAGE" : "static/camera_320x240.jpg",
     "GUI_WINDOW_X" : 1000,
     "GUI_WINDOW_Y" : 700,
-    "GUI_LABEL_CLOCK" : "Seconds Remaining: %d",
-    "ACTIONS" : {
-        "begin" : "B",
-        "align" : "A",
-        "seek" : "S",
-        "end" : "E",
-        "grab" : "G",
-        "turn" : "T",
-        "jump" : "J",
-        "finish" : "F",
-        "wait" : "W",
-        "repeat" : "R",
-        "unknown" : "?",
-        "clear" : "C"
-    }
+    "GUI_LABEL_CLOCK" : "Seconds Remaining: %d"
 }
