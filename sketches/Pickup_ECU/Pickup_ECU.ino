@@ -314,7 +314,7 @@ int align(void) {
       i = 0;
     }
     else if (x == -255) {
-      set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
+      set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
       i = 0;
     }
     else if (x == 255) {
