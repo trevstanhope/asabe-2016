@@ -355,7 +355,7 @@ int transfer(void) {
     x = line_detect();
     if (x == -2) {
       set_wheel_servos(-SERVO_FAST, SERVO_MEDIUM, SERVO_FAST, SERVO_MEDIUM);
-      delay(50);
+      delay(100);
       set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
       delay(50);
     }
@@ -366,11 +366,11 @@ int transfer(void) {
       set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
     }
     else if (x == 1) {
-      set_wheel_servos(-SERVO_SLOW, SERVO_MEDIUM, -SERVO_SLOW, SERVO_MEDIUM);
+      set_wheel_servos(-SERVO_SLOW, SERVO_MEDIUM, -SERVO_SLOW, SERVO_MEDIUM );
     }
     else if (x == 2) {
       set_wheel_servos(-SERVO_MEDIUM, SERVO_FAST, -SERVO_MEDIUM, SERVO_FAST);
-      delay(50);
+      delay(100);
       set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
       delay(50);
     }
