@@ -17,7 +17,8 @@ int line_detect(void);
 int transfer(void);
 int backup(int value);
 int zero(void);
-int manuever(void);
+int center_manuever(void);
+int edge_manuever(void);
 
 /* --- Constants --- */
 // Time intevals
