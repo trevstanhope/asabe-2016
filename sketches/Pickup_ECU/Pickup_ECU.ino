@@ -6,7 +6,7 @@
 /* --- Prototypes --- */
 int align(void);
 int grab_green(void);
-int grab_yellow(void);
+int grab_orange(void);
 int wait(void);
 int forward(int);
 int seek_line(void);
@@ -173,8 +173,8 @@ void loop() {
     char command = Serial.read();
     int value = Serial.parseInt();
     switch (command) {
-      case YELLOW_GRAB_COMMAND:
-        result = grab_yellow();
+      case ORANGE_GRAB_COMMAND:
+        result = grab_orange();
         break;
       case GREEN_GRAB_COMMAND:
         result = grab_green();
@@ -240,7 +240,7 @@ int grab_green(void) {
   return 0;
 }
 
-int grab_yellow(void) {
+int grab_orange(void) {
   pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MIN); // Sets gate to yellow
   pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX);
   delay(ARM_LIFT_DELAY);
