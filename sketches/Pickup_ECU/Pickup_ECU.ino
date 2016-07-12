@@ -49,7 +49,7 @@ const int PIVOT_LEFT_COMMAND    = 'L';
 const int M                     = 'M';
 const int N                     = 'N';
 const int O                     = 'O';
-const int P                     = 'P';
+const int LINE_POSITION_COMMAND = 'P';
 const int Q                     = 'Q';
 const int PIVOT_RIGHT_COMMAND   = 'R';
 const int SEEK_COMMAND          = 'S';
@@ -209,6 +209,9 @@ void loop() {
         break;
       case CENTER_COMMAND:
         result = center_manuever();
+        break;
+      case LINE_POSITION_COMMAND:
+        result = line_detect();
         break;
       default:
         result = 255;
