@@ -101,6 +101,7 @@ class Server:
     ### State-Machine Functions ###
     def __init_statemachine__(self):
         self.bgr = cv2.imread(self.GUI_CAMERA_IMAGE)
+        self.mask = cv2.imread(self.GUI_CAMERA_IMAGE)
         self.running = False
         self.start_time = time.time()
         self.end_time = self.start_time + self.RUN_TIME
@@ -112,7 +113,9 @@ class Server:
         """
         self.pretty_print("DECIDE", "Last Action: %s" % request['last_action'])
         self.pretty_print("DECIDE", "Robot: %s" % request['robot'])
-
+        
+        if request['robot'] == 'picker':
+            heading, distance, color = self.find_ball(np.array(request['bgr'], np.uint8))
 
         ## If paused
         if self.running == False:
@@ -124,7 +127,6 @@ class Server:
             
             ## Picker
             if request['robot'] == 'picker':
-                heading, distance, color = self.find_ball(np.array(request['bgr'], np.uint8))
                 if request['last_action'] == 'Z':
                     action = 'J' 
                 elif request['last_action'] == 'G' or request['last_action'] == 'O':
@@ -183,6 +185,11 @@ class Server:
         orange_mask = cv2.inRange(hsv, orangeLower, orangeUpper)
         orange_mask = cv2.erode(orange_mask, None, iterations=2)
         orange_mask = cv2.dilate(orange_mask, None, iterations=2)
+        
+        orange_bgr = np.dstack((np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8), orange_mask, orange_mask)) # set self.mask to be accessed by the GUI
+        green_bgr = np.dstack((np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8), green_mask, np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8))) # set self.mask to be accessed by the GUI
+        self.mask = orange_bgr + green_bgr
+
         detected_balls = []
         # Green Contours
         green_contours = cv2.findContours(green_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
@@ -237,7 +244,7 @@ class Server:
     def refresh(self):
         """ Update the GUI """
         if self.VERBOSE: self.pretty_print('CHERRYPY', 'Updating GUI ...')
-        self.gui.draw_camera(self.bgr)
+        self.gui.draw_camera(self.bgr, self.mask)
         picker_position = (0,0) #TODO
         delivery_position = (0,0) #TODO
         self.gui.draw_board(picker_position, delivery_position)
@@ -346,11 +353,17 @@ class GUI(object):
             self.label_clock.show()
             self.vbox2.add(self.label_clock)
             self.camera_bgr = cv2.imread(object.GUI_CAMERA_IMAGE)
+            self.camera_mask = cv2.imread(object.GUI_CAMERA_IMAGE)
             self.camera_pix = gtk.gdk.pixbuf_new_from_array(self.camera_bgr, gtk.gdk.COLORSPACE_RGB, 8)
+            self.camera_pix_mask = gtk.gdk.pixbuf_new_from_array(self.camera_mask, gtk.gdk.COLORSPACE_RGB, 8)
             self.camera_img = gtk.Image()
+            self.camera_img_mask = gtk.Image()
             self.camera_img.set_from_pixbuf(self.camera_pix)
+            self.camera_img_mask.set_from_pixbuf(self.camera_pix_mask)
             self.camera_img.show()
+            self.camera_img_mask.show()
             self.vbox2.add(self.camera_img)
+            self.vbox2.add(self.camera_img_mask)
             self.vbox.show()
 
             # Board Image
@@ -388,12 +401,16 @@ class GUI(object):
             print str(e)
 
     ## Draw Camera
-    def draw_camera(self, bgr):
+    def draw_camera(self, bgr, mask):
         try:
             self.camera_bgr = bgr
+            self.camera_mask = mask
             rgb = cv2.cvtColor(self.camera_bgr, cv2.COLOR_BGR2RGB)
+            rgb_mask = cv2.cvtColor(self.camera_mask, cv2.COLOR_BGR2RGB)
             self.camera_pix = gtk.gdk.pixbuf_new_from_array(rgb, gtk.gdk.COLORSPACE_RGB, 8)
+            self.camera_pix_mask = gtk.gdk.pixbuf_new_from_array(rgb_mask, gtk.gdk.COLORSPACE_RGB, 8)
             self.camera_img.set_from_pixbuf(self.camera_pix)
+            self.camera_img_mask.set_from_pixbuf(self.camera_pix_mask)
         except Exception as e:
             print str(e)
 
