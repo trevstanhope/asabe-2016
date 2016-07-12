@@ -1,6 +1,6 @@
 import serial, sys
  
-for dev in ['/dev/ttyACM0', '/dev/ttyUSB0']:
+for dev in ['/dev/ttyACM', '/dev/ttyUSB']:
     for i in range(5):
         try:
             s = serial.Serial(dev + str(i), 9600, timeout=2)
