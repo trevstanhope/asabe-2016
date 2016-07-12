@@ -9,7 +9,7 @@ int grab_green(void);
 int grab_yellow(void);
 int wait(void);
 int forward(int);
-int forward_seek(void);
+int seek_line(void);
 int pivot_right(int);
 int pivot_left(int);
 void set_wheel_servos(int, int, int, int);
@@ -19,10 +19,12 @@ int backup(int value);
 int zero(void);
 int center_manuever(void);
 int edge_manuever(void);
+int jump(void);
 
 /* --- Constants --- */
 // Time intevals
 const int WAIT_INTERVAL = 100;
+const int TURN30_INTERVAL = 1500;
 const int TURN60_INTERVAL = 3000;
 const int TURN90_INTERVAL = 4000;
 const int SWEEP45_INTERVAL = 3500;
@@ -43,7 +45,7 @@ const int FORWARD_COMMAND       = 'F';
 const int GREEN_GRAB_COMMAND    = 'G';
 const int H                     = 'H';
 const int I                     = 'I';
-const int J                     = 'J';
+const int JUMP_COMMAND          = 'J';
 const int K                     = 'K';
 const int PIVOT_LEFT_COMMAND    = 'L';
 const int M                     = 'M';
@@ -184,7 +186,7 @@ void loop() {
         result = backup(value);
         break;
       case SEEK_COMMAND:
-        result = forward_seek();
+        result = seek_line();
         break;
       case PIVOT_RIGHT_COMMAND:
         result = pivot_right(value);
@@ -259,7 +261,7 @@ int forward(int value) {
   return 0;
 }
 
-int forward_seek(void) {
+int seek_line(void) {
   set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
   while (line_detect() == -255) {
     delay(20);
@@ -367,6 +369,13 @@ int edge_manuever(void) {
   set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
   delay(TURN90_INTERVAL);
   set_wheel_servos(0, 0, 0, 0);
+  return 0;
+}
+
+int jump(void) {
+  set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
+  delay(TURN90_INTERVAL);
+  seek_line();
   return 0;
 }
 
