@@ -214,10 +214,10 @@ class Server:
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         green_mask = cv2.inRange(hsv, GREEN_LOWER, GREEN_UPPER)
         green_mask = cv2.erode(green_mask, None, iterations=2)
-        green_mask = cv2.dilate(green_mask, None, iterations=1)
+        green_mask = cv2.dilate(green_mask, None, iterations=2)
         orange_mask = cv2.inRange(hsv, ORANGE_LOWER, ORANGE_UPPER)
         orange_mask = cv2.erode(orange_mask, None, iterations=2)
-        orange_mask = cv2.dilate(orange_mask, None, iterations=1)
+        orange_mask = cv2.dilate(orange_mask, None, iterations=2)
         orange_bgr = np.dstack((np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8), orange_mask, orange_mask)) # set self.mask to be accessed by the GUI
         green_bgr = np.dstack((np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8), green_mask, np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8))) # set self.mask to be accessed by the GUI
         detected_balls = []
@@ -276,7 +276,7 @@ class Server:
             self.mask = orange_bgr + green_bgr
             return None, None, None
     def estimate_distance(self, y, r):
-        return int(30 - r)
+        return int(r)
 
     ### CherryPy Server Functions ###
     def __init_tasks__(self):
