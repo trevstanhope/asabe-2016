@@ -82,14 +82,15 @@ class Robot:
     
     ## Initialize Arduino
     def init_arduino(self, wait=2.0, attempts=3):
-        if self.VERBOSE: self.pretty_print("CTRL", "Initializing Arduino ...")      
-        for i in range(attempts):
-            try:
-                self.arduino = Serial(self.ARDUINO_DEV + str(i), self.ARDUINO_BAUD, timeout=self.ARDUINO_TIMEOUT)
-                time.sleep(wait)
-                break
-            except Exception as e:
-                self.pretty_print('CTRL', 'Error: %s' % str(e))
+        if self.VERBOSE: self.pretty_print("CTRL", "Initializing Arduino ...") 
+        for dev in self.ARDUINO_DEV:
+            for i in range(attempts):
+                try:
+                    self.arduino = Serial(dev + str(i), self.ARDUINO_BAUD, timeout=self.ARDUINO_TIMEOUT)
+                    time.sleep(wait)
+                    break
+                except Exception as e:
+                    self.pretty_print('CTRL', 'Error: %s' % str(e))
     
     ## Initialize camera
     def init_cam(self):

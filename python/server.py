@@ -116,8 +116,8 @@ class Server:
 
         ## If paused
         if self.running == False:
-            self.pretty_print("DECIDE", "Trial not started! Robots will wait!")
-            action = 'C'
+            self.pretty_print("DECIDE", "Trial not started! Robots will zero themselves and wait!")
+            action = 'Z'
 
         ## If running
         elif self.clock > 0: 
@@ -125,13 +125,13 @@ class Server:
             ## Picker
             if request['robot'] == 'picker':
                 heading, distance, color = self.find_ball(np.array(request['bgr'], np.uint8))
-                if request['last_action'] == 'C':
+                if request['last_action'] == 'Z':
                     action = 'J' 
                 elif request['last_action'] == 'G' or request['last_action'] == 'O':
                     action = 'W' 
             ## Delivery
             elif request['robot'] == 'delivery':
-                if request['last_action'] == 'C':
+                if request['last_action'] == 'Z': # Zero
                     action = 'J' 
                 elif request['last_action'] == 'J':
                     action = 'A' 
