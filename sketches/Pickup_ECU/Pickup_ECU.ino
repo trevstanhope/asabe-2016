@@ -24,7 +24,7 @@ int jump(void);
 /* --- Constants --- */
 // Time intevals
 const int WAIT_INTERVAL = 100;
-const int TURN30_INTERVAL = 1500;
+const int TURN30_INTERVAL = 1000;
 const int TURN60_INTERVAL = 3000;
 const int TURN90_INTERVAL = 4000;
 const int SWEEP45_INTERVAL = 3500;
@@ -378,6 +378,7 @@ int edge_manuever(void) {
 int jump(void) {
   set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
   delay(TURN30_INTERVAL);
+  set_wheel_servos(0, 0, 0, 0);
   seek_line();
   return 0;
 }
