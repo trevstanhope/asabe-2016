@@ -196,11 +196,7 @@ class Server:
         return action
 
     ### Computer Vision ###
-    def find_ball(self, bgr,
-                        RADIUS_MIN=10, RADIUS_MAX=160,
-                        GREEN_LOWER = (29, 64, 32), GREEN_UPPER = (90, 255, 255),
-                        ORANGE_LOWER = (5, 64, 32), ORANGE_UPPER = (40, 255, 255)
-        ):
+    def find_ball(self, bgr, RADIUS_MIN=10, RADIUS_MAX=160):
         """
         Find the contours for both masks, then use these
         to compute the minimum enclosing circle and centroid
@@ -209,16 +205,15 @@ class Server:
             pos: heading, distance, color
         """
 
-
         if self.VERBOSE: self.pretty_print("CV2", "Searching for ball ...")
-        blurred = cv2.GaussianBlur(bgr, (11, 11), 0)
+        blurred = cv2.GaussianBlur(bgr, (25, 25), 0)
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         green_mask = cv2.inRange(hsv, GREEN_LOWER, GREEN_UPPER)
         green_mask = cv2.erode(green_mask, None, iterations=2)
-        green_mask = cv2.dilate(green_mask, None, iterations=2)
+        green_mask = cv2.dilate(green_mask, None, iterations=1)
         orange_mask = cv2.inRange(hsv, ORANGE_LOWER, ORANGE_UPPER)
         orange_mask = cv2.erode(orange_mask, None, iterations=2)
-        orange_mask = cv2.dilate(orange_mask, None, iterations=2)
+        orange_mask = cv2.dilate(orange_mask, None, iterations=1)
         orange_bgr = np.dstack((np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8), orange_mask, orange_mask)) # set self.mask to be accessed by the GUI
         green_bgr = np.dstack((np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8), green_mask, np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8))) # set self.mask to be accessed by the GUI
         detected_balls = []
