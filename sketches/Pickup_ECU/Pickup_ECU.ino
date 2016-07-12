@@ -376,7 +376,7 @@ int edge_manuever(void) {
 }
 
 int jump(void) {
-  set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
+  set_wheel_servos(SERVO_MEDIUM, -SERVO_SLOW, SERVO_MEDIUM, -SERVO_SLOW);
   delay(TURN30_INTERVAL);
   set_wheel_servos(0, 0, 0, 0);
   seek_line();
