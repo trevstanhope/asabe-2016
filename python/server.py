@@ -112,25 +112,50 @@ class Server:
         """
         self.pretty_print("DECIDE", "Last Action: %s" % request['last_action'])
         self.pretty_print("DECIDE", "Robot: %s" % request['robot'])
-        x,y,r,c = self.find_ball(np.array(request['bgr'], np.uint8))
+        heading, distance, color = self.find_ball(np.array(request['bgr'], np.uint8))
 
         ## If paused
         if self.running == False:
-            if request['last_action'] == 'clear':
-                action = 'W'
-            else:
-                action = 'W'
+            self.pretty_print("DECIDE", "Trial not started! Robots will wait!")
+            action = 'C'
+
         ## If running
         elif self.clock > 0: 
+            
+            ## Picker
             if request['robot'] == 'picker':
-                action = 'W'
+                if request['last_action'] == 'C':
+                    action = 'J' 
+                elif request['last_action'] == 'G' or request['last_action'] == 'O':
+                    action = 'W' 
+            ## Delivery
             elif request['robot'] == 'delivery':
-                action = 'W'
+                if request['last_action'] == 'C':
+                    action = 'J' 
+                elif request['last_action'] == 'J':
+                    action = 'A' 
+                elif request['last_action'] == 'A':
+                    action = 'F' 
+                elif request['last_action'] == 'F':  
+                    action = 'T' 
+                elif request['last_action'] == 'T':
+                    action = 'W' 
+                elif request['last_action'] == 'R':
+                    action = 'D' 
+                elif request['last_action'] == 'D':
+                    action = 'W'
+                elif request['last_action'] == 'O':
+                    action = 'W'
+                elif request['last_action'] == 'G':
+                    action = 'W'
+                elif request['last_action'] == '?':
+                    self.pretty_print("WARNING", "Last action unknown!")
             else:
                 raise Exception("Unrecgnized robot identifier!")
         ## If times is up
         else:
-            action = 'end'
+            self.pretty_print("DECIDE", "Time is up! Robots will wait!")
+            action = 'W' # halt and wait at end
         return action
 
     ### Computer Vision ###
@@ -140,7 +165,7 @@ class Server:
         to compute the minimum enclosing circle and centroid
         Returns:
             color : green, yellow
-            pos: x, y, z
+            pos: heading, distance, color
         """
         greenLower = (29, 64, 32)
         greenUpper = (90, 255, 255)
@@ -179,19 +204,20 @@ class Server:
                 if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
                     detected_balls.append((x,y,radius,'orange'))
         # Draw
-
         if len(detected_balls) > 0:
-            for x,y,r,c in detected_balls:
-                if c == 'green':
+            for x,y,r,color in detected_balls:
+                if color == 'green':
                     cv2.circle(bgr, (int(x), int(y)), int(radius), (0, 255, 0), 2)
-                if c == 'orange':
+                if color == 'orange':
                     cv2.circle(bgr, (int(x), int(y)), int(radius), (0, 255, 255), 2)
             x,y,r,c = max(detected_balls) # return the farthest to the right, use min() for left
             cv2.circle(bgr, (int(x),int(y)), 5, (0, 0, 255), -1)
-            self.bgr = bgr
-            return x,y,r,c
+            self.bgr = bgr # set BGR of GUI with the updated, drawn-on version
+            heading = int(x - self.CAMERA_WIDTH / 2)
+            distance = r # estimate the distance
+            return heading, distance, color
         else:
-            return None, None, None, None
+            return None, None, None
  
     ### CherryPy Server Functions ###
     def __init_tasks__(self):

@@ -28,7 +28,7 @@ const int C                     = 'C';
 const int DROP_BALLS_COMMAND    = 'D';
 const int E                     = 'E';
 const int FOLLOW_LINE_COMMAND   = 'F';
-const int G                     = 'G';
+const int GREEN_COUNT_COMMAND   = 'G';
 const int H                     = 'H';
 const int I                     = 'I';
 const int JUMP_COMMAND          = 'J';
@@ -36,7 +36,7 @@ const int K                     = 'K';
 const int LINE_COMMAND          = 'L';
 const int M                     = 'M';
 const int N                     = 'N';
-const int O                     = 'O';
+const int ORANGE_COUNT_COMMAND  = 'O';
 const int P                     = 'P';
 const int Q                     = 'Q';
 const int REVERSE_COMMAND       = 'R';
@@ -89,6 +89,8 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it 
 char command;
 int result;
 char output[OUTPUT_LENGTH];
+int orange_balls = 0;
+int green_balls = 0;
 
 /* --- Helper Functions --- */
 void set_wheel_servos(int fl, int fr, int bl, int br) {
@@ -163,6 +165,14 @@ void loop() {
         break;
       case JUMP_COMMAND:
         result = jump();
+        break;
+      case ORANGE_COUNT_COMMAND:
+        result = 0;
+        orange_balls++;
+        break;
+      case GREEN_COUNT_COMMAND:
+        result = 0;
+        green_balls++;
         break;
       case LINE_COMMAND:
         result = line_detect();
