@@ -7,7 +7,7 @@ for dev in ['/dev/ttyACM0', '/dev/ttyUSB0']:
             time.sleep(wait)
             break
         except Exception as e:
-            self.pretty_print('CTRL', 'Error: %s' % str(e))
+            print str(e)
 
 while True:
     try:
