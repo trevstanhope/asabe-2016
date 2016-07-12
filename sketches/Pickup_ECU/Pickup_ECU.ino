@@ -288,6 +288,14 @@ int align(void) {
     1. Wiggle onto line
     2. Reverse to end of line
   */
+  // Advance a small distance
+  set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
+  delay(500);
+  while ((line_detect() =! -1) || (line_detect() =! 0) || (line_detect() =! 1)) {
+    delay(20);
+  }
+  set_wheel_servos(0, 0, 0, 0);
+
   // Wiggle onto line
   int x = line_detect();
   int i = 0;
@@ -321,7 +329,7 @@ int align(void) {
       set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
       i = 0;
     }
-    delay(50);
+    delay(20);
   }
   set_wheel_servos(0, 0, 0, 0); // Halt
   return 0;
