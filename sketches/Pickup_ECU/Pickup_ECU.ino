@@ -212,6 +212,9 @@ void loop() {
       case CENTER_COMMAND:
         result = center_manuever();
         break;
+      case JUMP_COMMAND:
+        result = jump();
+        break;
       default:
         result = 255;
         command = UNKNOWN_COMMAND;
