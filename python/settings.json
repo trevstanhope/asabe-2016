@@ -22,7 +22,7 @@
     "CAMERA_CONTRAST" : 0.3,
     "SAT_MIN" : 96,
     "SAT_MAX" : 255,
-    "VAL_MIN" : 32,
+    "VAL_MIN" : 50,
     "VAL_MAX" : 245,
     "GREEN_MIN" : 29,
     "GREEN_MAX" : 90,

@@ -276,7 +276,7 @@ class Server:
             self.mask = orange_bgr + green_bgr
             return None, None, None
     def estimate_distance(self, y, r):
-        return int(r)
+        return int(2200 * r ** -1.65)
 
     ### CherryPy Server Functions ###
     def __init_tasks__(self):
