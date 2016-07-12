@@ -101,7 +101,7 @@ const int SERVO_MEDIUM = 20;
 const int SERVO_FAST = 40;
 const int FRONT_RIGHT_ZERO = 371;
 const int FRONT_LEFT_ZERO = 376;
-const int BACK_RIGHT_ZERO = 375;
+const int BACK_RIGHT_ZERO = 370;
 const int BACK_LEFT_ZERO = 375;
 
 /* --- Variables --- */
