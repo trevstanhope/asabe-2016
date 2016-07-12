@@ -342,7 +342,7 @@ int align(void) {
 }
 
 int backup(int value) {
-  set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
+  set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_SLOW, SERVO_SLOW);
   delay(value);
   set_wheel_servos(0, 0, 0, 0);
   return 0;
