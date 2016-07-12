@@ -353,7 +353,7 @@ int transfer(void) {
   while (true)  {
     x = line_detect();
     if (x == -2) {
-      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
+      set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
     }
     else if (x == -1) {
       set_wheel_servos(-SERVO_FAST, SERVO_MEDIUM, -SERVO_FAST, SERVO_MEDIUM);
@@ -365,7 +365,7 @@ int transfer(void) {
       set_wheel_servos(-SERVO_MEDIUM, SERVO_FAST, -SERVO_MEDIUM, SERVO_FAST);
     }
     else if (x == 2) {
-      set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
+      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
     }
     else if (x == 255) {
       break;
