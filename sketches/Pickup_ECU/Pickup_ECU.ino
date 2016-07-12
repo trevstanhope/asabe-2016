@@ -49,7 +49,7 @@ const int PIVOT_LEFT_COMMAND    = 'L';
 const int M                     = 'M';
 const int N                     = 'N';
 const int O                     = 'O';
-const int LINE_POSITION_COMMAND = 'P';
+const int P                     = 'P';
 const int Q                     = 'Q';
 const int PIVOT_RIGHT_COMMAND   = 'R';
 const int SEEK_COMMAND          = 'S';
@@ -210,15 +210,12 @@ void loop() {
       case CENTER_COMMAND:
         result = center_manuever();
         break;
-      case LINE_POSITION_COMMAND:
-        result = line_detect();
-        break;
       default:
         result = 255;
         command = UNKNOWN_COMMAND;
         break;
     }
-    sprintf(output, "{'command':'%c','result':%d}", command, result);
+    sprintf(output, "{'command':'%c','result':%d, 'line':%d}", command, result, line_detect());
     Serial.println(output);
     Serial.flush();
   }
