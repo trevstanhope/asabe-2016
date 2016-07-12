@@ -197,20 +197,28 @@ class Server:
         if len(green_contours) > 0: # only proceed if at least one contour was found
             for c in green_contours:
                 ((x, y), radius) = cv2.minEnclosingCircle(c)
-                M = cv2.moments(c)
-                center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-                if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
-                    detected_balls.append((x,y,radius,'green'))
+                k = cv2.isContourConvex(c)
+                area = cv2.contourArea(c)
+                estimated_area = np.pi * radius ** 2.0
+                if estimated_area <= 1.5 * area:
+                    M = cv2.moments(c)
+                    center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+                    if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
+                        detected_balls.append((x,y,radius,'green'))
         # Orange Contours
         orange_contours = cv2.findContours(orange_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
         center = None # initialize the current (x, y) center of the ball
         if len(orange_contours) > 0: # only proceed if at least one contour was found
             for c in orange_contours:
                 ((x, y), radius) = cv2.minEnclosingCircle(c)
-                M = cv2.moments(c)
-                center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))        
-                if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
-                    detected_balls.append((x,y,radius,'orange'))
+                k = cv2.isContourConvex(c)
+                area = cv2.contourArea(c)
+                estimated_area = np.pi * radius ** 2.0
+                if estimated_area <= 1.5 * area:
+                    M = cv2.moments(c)
+                    center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))        
+                    if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
+                        detected_balls.append((x,y,radius,'orange'))
         # Draw
         if len(detected_balls) > 0:
             for x,y,r,color in detected_balls:

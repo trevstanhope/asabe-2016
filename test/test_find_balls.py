@@ -58,12 +58,16 @@ for f in fnames:
         # Find the largest contour in the mask, then use
         # it to compute the minimum enclosing circle and centroid
         for c in green_contours:
-            ((x, y), radius) = cv2.minEnclosingCircle(c)
-            M = cv2.moments(c)
-            center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-            if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
-                cv2.circle(bgr, (int(x), int(y)), int(radius), (0, 255, 0), 2)
-                cv2.circle(bgr, center, 5, (0, 0, 255), -1)
+            k = cv2.isContourConvex(c)
+            approx = cv2.approxPolyDP(c,0.01*cv2.arcLength(c,True),True)
+            area = cv2.contourArea(c)
+            if ((len(approx) > 8) & (area > 30) ):
+                ((x, y), radius) = cv2.minEnclosingCircle(c)
+                M = cv2.moments(c)
+                center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+                if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
+                    cv2.circle(bgr, (int(x), int(y)), int(radius), (0, 255, 0), 2)
+                    cv2.circle(bgr, center, 5, (0, 0, 255), -1)
     # Orange Contours
     orange_contours = cv2.findContours(orange_mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[-2]
     center = None # initialize the current (x, y) center of the ball
@@ -71,6 +75,8 @@ for f in fnames:
         # Find the largest contour in the mask, then use
         # it to compute the minimum enclosing circle and centroid
         for c in orange_contours:
+            k = cv2.isContourConvex(c)
+            print k
             ((x, y), radius) = cv2.minEnclosingCircle(c)
             M = cv2.moments(c)
             center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))        
