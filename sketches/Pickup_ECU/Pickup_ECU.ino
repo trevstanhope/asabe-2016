@@ -291,8 +291,9 @@ int align(void) {
   // Advance a small distance
   set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
   delay(500);
-  set_wheel_servos(-SERVO_SLOW, -SERVO_SLOW, -SERVO_SLOW, -SERVO_SLOW);
-  while ((line_detect() != -1) || (line_detect() != 0) || (line_detect() != 1)) {
+  set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
+  while (true) {
+    if ((line_detect() == -1) || (line_detect() == 0) || (line_detect() == 1)) { break; }
     delay(20);
   }
   set_wheel_servos(0, 0, 0, 0);
