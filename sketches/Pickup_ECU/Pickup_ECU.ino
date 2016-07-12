@@ -8,21 +8,23 @@ int align(void);
 int grab_green(void);
 int grab_yellow(void);
 int wait(void);
-int forward_jump(int);
+int forward(int);
 int forward_seek(void);
 int pivot_right(int);
 int pivot_left(int);
 void set_wheel_servos(int, int, int, int);
 int line_detect(void);
 int transfer(void);
-int backup(void);
+int backup(int value);
 int zero(void);
+int manuever(void);
 
 /* --- Constants --- */
 // Time intevals
 const int WAIT_INTERVAL = 100;
 const int TURN45_INTERVAL = 1000;
 const int TURN90_INTERVAL = 3000;
+const int SWEEP90_INTERVAL = 5000;
 const int ARM_LIFT_DELAY = 2000;
 const int ARM_EXTENSION_DELAY = 100;
 const int SORTING_GATE_DELAY = 500;
@@ -35,14 +37,14 @@ const int BACKUP_COMMAND        = 'B';
 const int C                     = 'C';
 const int D                     = 'D';
 const int E                     = 'E';
-const int FORWARD_JUMP_COMMAND  = 'F';
+const int FORWARD_COMMAND       = 'F';
 const int GREEN_GRAB_COMMAND    = 'G';
 const int H                     = 'H';
 const int I                     = 'I';
 const int J                     = 'J';
 const int K                     = 'K';
 const int PIVOT_LEFT_COMMAND    = 'L';
-const int M                     = 'M';
+const int MANUEVER_COMMAND      = 'M';
 const int N                     = 'N';
 const int O                     = 'O';
 const int P                     = 'P';
@@ -173,8 +175,11 @@ void loop() {
       case GREEN_GRAB_COMMAND:
         result = grab_green();
         break;
-      case FORWARD_JUMP_COMMAND:
-        result = forward_jump(value);
+      case FORWARD_COMMAND:
+        result = forward(value);
+        break;
+      case BACKUP_COMMAND:
+        result = backup(value);
         break;
       case SEEK_COMMAND:
         result = forward_seek();
@@ -196,6 +201,9 @@ void loop() {
         break;
       case ZERO_COMMAND:
         result = zero();
+        break;
+      case MANUEVER_COMMAND:
+        result = manuever();
         break;
       default:
         result = 255;
@@ -239,7 +247,7 @@ int wait(void) {
   return 0;
 }
 
-int forward_jump(int value) {
+int forward(int value) {
   set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
   delay(value);
   set_wheel_servos(0, 0, 0, 0);
@@ -272,11 +280,9 @@ int pivot_left(int value) {
 int align(void) {
   /*
     Aligns robot at end of T.
-
     1. Wiggle onto line
     2. Reverse to end of line
   */
-
   // Wiggle onto line
   int x = line_detect();
   int i = 0;
@@ -316,8 +322,10 @@ int align(void) {
   return 0;
 }
 
-int backup(void) { 
-  
+int backup(int value) { 
+  set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
+  delay(value);
+  set_wheel_servos(0, 0, 0, 0);
   return 0;
 }
 
@@ -327,6 +335,15 @@ int transfer(void) {
 
 int zero(void) {
   setup();
+  return 0;
+}
+
+int manuever(void) {
+  set_wheel_servos(-SERVO_MEDIUM, SERVO_FAST, -SERVO_MEDIUM, SERVO_FAST);
+  delay(SWEEP90_INTERVAL);
+  set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
+  delay(TURN90_INTERVAL);
+  set_wheel_servos(0, 0, 0, 0);
   return 0;
 }
 
