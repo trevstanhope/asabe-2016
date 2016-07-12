@@ -90,8 +90,9 @@ const int HEAVYSERVO_MAX =  550;
 const int ACTUATOR_MIN = 300;
 const int ACTUATOR_MAX = 460;
 const int PWM_FREQ = 60; // analog servos run at 60 Hz
-const int SERVO_SLOW = 20;
-const int SERVO_SPEED = 15;
+const int SERVO_SLOW = 10;
+const int SERVO_MEDIUM = 20;
+const int SERVO_FAST = 30;
 const int FRONT_RIGHT_ZERO = 371;
 const int FRONT_LEFT_ZERO = 376;
 const int BACK_RIGHT_ZERO = 371;
@@ -239,14 +240,14 @@ int wait(void) {
 }
 
 int forward_jump(int value) {
-  set_wheel_servos(15, -15, 15, -15);
+  set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
   delay(value);
   set_wheel_servos(0, 0, 0, 0);
   return 0;
 }
 
 int forward_seek(void) {
-  set_wheel_servos(15, -15, 15, -15);
+  set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
   while (line_detect() == -255) {
     delay(20);
   }
@@ -255,14 +256,14 @@ int forward_seek(void) {
 }
 
 int pivot_right(int value) {
-  set_wheel_servos(15, 15, 15, 15);
+  set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
   delay(value);
   set_wheel_servos(0, 0, 0, 0);
   return 0;
 }
 
 int pivot_left(int value) {
-  set_wheel_servos(-15, -15, -15, -15);
+  set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
   delay(value);
   set_wheel_servos(0, 0, 0, 0);
   return 0;
@@ -282,31 +283,31 @@ int align(void) {
   while (i <= 20) {
     x = line_detect();
     if (x == 0) {
-      set_wheel_servos(10, -10, 10, -10);
+      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
       i++;
     }
     else if (x == -1) {
-      set_wheel_servos(30, 10, 30, 10);
+      set_wheel_servos(SERVO_MEDIUM, SERVO_SLOW, SERVO_MEDIUM, SERVO_SLOW);
       i++;
     }
     else if (x == -2) {
-      set_wheel_servos(-40, -40, -40, -40);
+      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
       i = 0;
     }
     else if (x == 1) {
-      set_wheel_servos(10, -30, 10, -30);
+      set_wheel_servos(SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM);
       i++;
     }
     else if (x == 2) {
-      set_wheel_servos(-40, -40, -40, -40);
+      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
       i = 0;
     }
     else if (x == -255) {
-      set_wheel_servos(-15, 15, -15, 15);
+      set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
       i = 0;
     }
     else if (x == 255) {
-      set_wheel_servos(15, -15, 15, -15);
+      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
       i = 0;
     }
     delay(50);
