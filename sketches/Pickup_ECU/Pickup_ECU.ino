@@ -293,7 +293,7 @@ int align(void) {
   delay(500);
   set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
   while (true) {
-    if ((line_detect() == -1) || (line_detect() == 0) || (line_detect() == 1)) { break; }
+    if (line_detect() == 0) { break; }
     delay(20);
   }
   set_wheel_servos(0, 0, 0, 0);
