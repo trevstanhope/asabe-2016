@@ -112,7 +112,7 @@ class Server:
         """
         self.pretty_print("DECIDE", "Last Action: %s" % request['last_action'])
         self.pretty_print("DECIDE", "Robot: %s" % request['robot'])
-        heading, distance, color = self.find_ball(np.array(request['bgr'], np.uint8))
+
 
         ## If paused
         if self.running == False:
@@ -124,6 +124,7 @@ class Server:
             
             ## Picker
             if request['robot'] == 'picker':
+                heading, distance, color = self.find_ball(np.array(request['bgr'], np.uint8))
                 if request['last_action'] == 'C':
                     action = 'J' 
                 elif request['last_action'] == 'G' or request['last_action'] == 'O':
