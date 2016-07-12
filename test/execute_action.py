@@ -1,7 +1,7 @@
 import serial, sys
  
 for dev in ['/dev/ttyACM0', '/dev/ttyUSB0']:
-    for i in range(attempts):
+    for i in range(5):
         try:
             s = Serial(dev + str(i), 9600, timeout=2)
             time.sleep(wait)
