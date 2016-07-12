@@ -23,7 +23,7 @@ int manuever(void);
 // Time intevals
 const int WAIT_INTERVAL = 100;
 const int TURN45_INTERVAL = 1000;
-const int TURN90_INTERVAL = 3000;
+const int TURN90_INTERVAL = 2000;
 const int SWEEP90_INTERVAL = 5000;
 const int ARM_LIFT_DELAY = 2000;
 const int ARM_EXTENSION_DELAY = 100;
@@ -94,7 +94,7 @@ const int ACTUATOR_MAX = 460;
 const int PWM_FREQ = 60; // analog servos run at 60 Hz
 const int SERVO_SLOW = 10;
 const int SERVO_MEDIUM = 20;
-const int SERVO_FAST = 30;
+const int SERVO_FAST = 40;
 const int FRONT_RIGHT_ZERO = 371;
 const int FRONT_LEFT_ZERO = 376;
 const int BACK_RIGHT_ZERO = 371;
@@ -339,7 +339,7 @@ int zero(void) {
 }
 
 int manuever(void) {
-  set_wheel_servos(-SERVO_MEDIUM, SERVO_FAST, -SERVO_MEDIUM, SERVO_FAST);
+  set_wheel_servos(-SERVO_SLOW, SERVO_FAST, -SERVO_SLOW, SERVO_FAST);
   delay(SWEEP90_INTERVAL);
   set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
   delay(TURN90_INTERVAL);
