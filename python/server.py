@@ -423,8 +423,8 @@ class GUI(object):
     ## Draw Camera
     def draw_camera(self, bgr, mask):
         try:
-            self.camera_bgr = bgr
-            self.camera_mask = mask
+            self.camera_bgr = cv2.resize(bgr, (320,240))
+            self.camera_mask = cv2.resize(mask, (320,240))
             rgb = cv2.cvtColor(self.camera_bgr, cv2.COLOR_BGR2RGB)
             rgb_mask = cv2.cvtColor(self.camera_mask, cv2.COLOR_BGR2RGB)
             self.camera_pix = gtk.gdk.pixbuf_new_from_array(rgb, gtk.gdk.COLORSPACE_RGB, 8)
