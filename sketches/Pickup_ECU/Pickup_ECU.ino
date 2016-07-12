@@ -378,7 +378,7 @@ int transfer(void) {
       }
       set_wheel_servos(0,0,0,0);
     }
-    delay(50);
+    delay(100);
   }
   set_wheel_servos(0, 0, 0, 0); // Stop servos
   // TODO ADD SWITCH
