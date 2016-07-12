@@ -154,11 +154,11 @@ class Robot:
             return None
 
     ## Exectute robotic action
-    def execute_command(self, command, attempts=5, wait=2.0):
+    def execute_action(self, action, attempts=5, wait=2.0):
         if self.VERBOSE: self.pretty_print('CTRL', 'Interacting with controller ...')
         try:
-            self.pretty_print("CTRL", "Command: %s" % str(command))
-            self.arduino.write(str(command)) # send command
+            self.pretty_print("CTRL", "Command: %s" % str(action))
+            self.arduino.write(str(action)) # send command
             time.sleep(wait)
             status = None
             while status == None:
@@ -192,7 +192,7 @@ class Robot:
             try:
                 action = self.request_action(status)
                 if action:
-                    status = self.execute_command(action) #!TODO handle different responses
+                    status = self.execute_action(action) #!TODO handle different responses
             except Exception as e:
                 self.pretty_print('RUN', 'Error: %s' % str(e))
 
