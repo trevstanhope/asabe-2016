@@ -349,7 +349,32 @@ int backup(int value) {
 }
 
 int transfer(void) {
+  while (true)  {
+    x = line_detect();
+    if (x == -1) {
+      set_wheel_servos(-SERVO_FAST, SERVO_MEDIUM, -SERVO_FAST, SERVO_MEDIUM);
+    }
+    else if (x == -2) {
+      set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
+    }
+    else if (x == 1) {
+      set_wheel_servos(-SERVO_MEDIUM, SERVO_FAST, -SERVO_MEDIUM, SERVO_FAST);
+    }
+    else if (x == 2) {
+      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
+    }
+    else if (x == 0) {
+      set_wheel_servos(SERVO_FAST, -SERVO_FAST, SERVO_FAST, -SERVO_FAST);
+    }
+    else if (x == 255) {
+      break;
+    }
+    delay(50);
+  }
+  set_wheel_servos(0, 0, 0, 0); // Stop servos
+  // TODO ADD SWITCH
   pwm.setPWM(REAR_GATE_MICROSERVO, 0, MICROSERVO_ZERO);
+  return 0;
 }
 
 int zero(void) {
