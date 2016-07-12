@@ -130,7 +130,13 @@ class Server:
                 if request['last_action'] == 'Z':
                     action = 'J' 
                 elif request['last_action'] == 'G' or request['last_action'] == 'O':
-                    action = 'W' 
+                    action = 'W'
+                elif request['last_action'] == '?':
+                    action = '?'
+                    self.pretty_print("WARNING", "Last action unknown! Check logs!")
+                else:
+                    action = '?'
+                    self.pretty_print("WARNING", "Unsupported PICKER action!")
             ## Delivery
             elif request['robot'] == 'delivery':
                 if request['last_action'] == 'Z': # Zero
@@ -152,13 +158,18 @@ class Server:
                 elif request['last_action'] == 'G':
                     action = 'W'
                 elif request['last_action'] == '?':
-                    self.pretty_print("WARNING", "Last action unknown!")
+                    action = '?'
+                    self.pretty_print("WARNING", "Last action unknown! Check logs!")
+                else:
+                    action = '?'
+                    self.pretty_print("WARNING", "Unsupported DELIVERY action!")
             else:
                 raise Exception("Unrecgnized robot identifier!")
         ## If times is up
         else:
             self.pretty_print("DECIDE", "Time is up! Robots will wait!")
             action = 'W' # halt and wait at end
+        self.pretty_print("DECIDE", "Next Action: %s" % action)
         return action
 
     ### Computer Vision ###
@@ -233,6 +244,7 @@ class Server:
             distance = r # estimate the distance
             return heading, distance, color
         else:
+            self.bgr = bgr
             return None, None, None
  
     ### CherryPy Server Functions ###
