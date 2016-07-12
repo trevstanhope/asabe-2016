@@ -131,19 +131,19 @@ class Server:
             ## Picker 
             if request['robot'] == 'picker':
                 if request['last_action'] == 'Z':
-                    action = 'F' 
+                    action = 'F5000' 
                 elif (request['last_action'] == 'F') or (request['last_action'] == 'L') or (request['last_action'] == 'R'):
                     if distance < self.TARGET_DISTANCE:
                         if color == 'green':
                             action == 'G'
                         elif color == 'orange':
                             action == 'O'
-                    elif heading < 0:
-                        action = 'L'
-                    elif heading > 0:
-                        action = 'R'
+                    elif heading < -self.ALIGNMENT_TOLERANCE:
+                        action = 'L' + str(abs(heading))
+                    elif heading > self.ALIGNMENT_TOLERANCE:
+                        action = 'R' + str(abs(heading))
                     else:
-                        action = 'F'
+                        action = 'F' + str(abs(distance))
                 elif request['last_action'] == 'G' or request['last_action'] == 'O':
                     action = 'W'
                 elif request['last_action'] == 'B':
@@ -187,7 +187,7 @@ class Server:
                     action = '?'
                     self.pretty_print("WARNING", "Unsupported DELIVERY action!")
             else:
-                raise Exception("Unrecgnized robot identifier!")
+                raise Exception("Unrecognized robot identifier!")
         ## If times is up
         else:
             self.pretty_print("DECIDE", "Time is up! Robots will wait!")
@@ -260,15 +260,15 @@ class Server:
                 d = self.estimate_distance(y,r)
                 if color == 'green':
                     cv2.circle(bgr, (int(x), int(y)), int(r), (0, 255, 0), 2)
-                    cv2.putText(bgr, str(d), (int(x)+10,int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+                    cv2.putText(bgr, str(d), (int(x)+10, int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
                 if color == 'orange':
                     cv2.circle(bgr, (int(x), int(y)), int(r), (0, 255, 255), 2)
-                    cv2.putText(bgr, str(d), (int(x)+10,int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+                    cv2.putText(bgr, str(d), (int(x)+10, int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
             x,y,r,c = max(detected_balls) # return the farthest to the right, use min() for left
             cv2.circle(bgr, (int(x),int(y)), 3, (0, 0, 255), -1)
             self.bgr = bgr # set BGR of GUI with the updated, drawn-on version
             self.mask = orange_bgr + green_bgr
-            heading = 50 * int(x - self.CAMERA_WIDTH / 2)
+            heading = self.estimate_heading(x)
             distance = self.estimate_distance(y,r)
             return heading, distance, color
         else:
@@ -276,8 +276,10 @@ class Server:
             self.mask = orange_bgr + green_bgr
             return None, None, None
     def estimate_distance(self, y, r):
-        return int(2200 * r ** -1.65)
-
+        return self.DISTANCE_GAIN * int(2200 * r ** -1.7)
+    def estimate_heading(self, x): 
+        return self.HEADING_GAIN * int(x - self.CAMERA_WIDTH / 2)
+        
     ### CherryPy Server Functions ###
     def __init_tasks__(self):
         if self.VERBOSE: self.pretty_print('CHERRYPY', 'Initializing Monitors ...')
@@ -294,7 +296,6 @@ class Server:
         resp = self.send_response(action)
     def refresh(self):
         """ Update the GUI """
-        if self.VERBOSE: self.pretty_print('CHERRYPY', 'Updating GUI ...')
         self.gui.draw_camera(self.bgr, self.mask)
         picker_position = (0,0) #TODO
         delivery_position = (0,0) #TODO

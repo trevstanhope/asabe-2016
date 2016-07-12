@@ -17,12 +17,12 @@
     "CAMERA_INDEX" : 0,
     "CAMERA_WIDTH" : 320,
     "CAMERA_HEIGHT" : 240,
-    "CAMERA_SATURATION" : 0.4,
-    "CAMERA_BRIGHTNESS" : 0.6,
+    "CAMERA_SATURATION" : 0.5,
+    "CAMERA_BRIGHTNESS" : 0.7,
     "CAMERA_CONTRAST" : 0.3,
-    "SAT_MIN" : 96,
+    "SAT_MIN" : 64,
     "SAT_MAX" : 255,
-    "VAL_MIN" : 50,
+    "VAL_MIN" : 32,
     "VAL_MAX" : 245,
     "GREEN_MIN" : 29,
     "GREEN_MAX" : 90,
@@ -33,5 +33,8 @@
     "GUI_WINDOW_X" : 1000,
     "GUI_WINDOW_Y" : 700,
     "GUI_LABEL_CLOCK" : "Seconds Remaining: %d",
-    "TARGET_DISTANCE" : 5
+    "TARGET_DISTANCE" : 50,
+    "ALIGNMENT_TOLERANCE" : 100,
+    "DISTANCE_GAIN" : 100,
+    "HEADING_GAIN" : 10
 }
