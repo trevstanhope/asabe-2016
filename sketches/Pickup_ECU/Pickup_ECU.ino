@@ -22,8 +22,9 @@ int manuever(void);
 /* --- Constants --- */
 // Time intevals
 const int WAIT_INTERVAL = 100;
-const int TURN45_INTERVAL = 1000;
-const int TURN90_INTERVAL = 2000;
+const int TURN45_INTERVAL = 2000;
+const int TURN90_INTERVAL = 4000;
+const int SWEEP45_INTERVAL = 2500;
 const int SWEEP90_INTERVAL = 5000;
 const int ARM_LIFT_DELAY = 2000;
 const int ARM_EXTENSION_DELAY = 100;
@@ -34,9 +35,9 @@ const int BAUD = 9600;
 const int OUTPUT_LENGTH = 256;
 const int ALIGN_COMMAND         = 'A';
 const int BACKUP_COMMAND        = 'B';
-const int C                     = 'C';
+const int CENTER_COMMAND        = 'C';
 const int D                     = 'D';
-const int E                     = 'E';
+const int EDGE_COMMAND          = 'E';
 const int FORWARD_COMMAND       = 'F';
 const int GREEN_GRAB_COMMAND    = 'G';
 const int H                     = 'H';
@@ -44,7 +45,7 @@ const int I                     = 'I';
 const int J                     = 'J';
 const int K                     = 'K';
 const int PIVOT_LEFT_COMMAND    = 'L';
-const int MANUEVER_COMMAND      = 'M';
+const int M                     = 'M';
 const int N                     = 'N';
 const int O                     = 'O';
 const int P                     = 'P';
@@ -202,8 +203,11 @@ void loop() {
       case ZERO_COMMAND:
         result = zero();
         break;
-      case MANUEVER_COMMAND:
-        result = manuever();
+      case EDGE_COMMAND:
+        result = edge_manuever();
+        break;
+      case CENTER_COMMAND:
+        result = center_manuever();
         break;
       default:
         result = 255;
@@ -338,7 +342,16 @@ int zero(void) {
   return 0;
 }
 
-int manuever(void) {
+int center_manuever(void) {
+  set_wheel_servos(-SERVO_SLOW, SERVO_FAST, -SERVO_SLOW, SERVO_FAST);
+  delay(SWEEP45_INTERVAL);
+  set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
+  delay(TURN45_INTERVAL);
+  set_wheel_servos(0, 0, 0, 0);
+  return 0;
+}
+
+int edge_manuever(void) {
   set_wheel_servos(-SERVO_SLOW, SERVO_FAST, -SERVO_SLOW, SERVO_FAST);
   delay(SWEEP90_INTERVAL);
   set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
