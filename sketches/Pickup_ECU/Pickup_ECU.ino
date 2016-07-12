@@ -332,7 +332,7 @@ int align(void) {
     }
     delay(WAIT_INTERVAL);
   }
-  delay(50);
+  set_wheel_servos(0, 0, 0, 0);
   return 0;
 }
 
