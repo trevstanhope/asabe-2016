@@ -16,6 +16,7 @@ void set_wheel_servos(int, int, int, int);
 int line_detect(void);
 int transfer(void);
 int backup(void);
+int zero(void);
 
 /* --- Constants --- */
 // Time intevals
