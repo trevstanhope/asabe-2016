@@ -50,7 +50,7 @@ const int K                     = 'K';
 const int PIVOT_LEFT_COMMAND    = 'L';
 const int M                     = 'M';
 const int N                     = 'N';
-const int O                     = 'O';
+const int ORANGE_GRAB_COMMAND   = 'O';
 const int P                     = 'P';
 const int Q                     = 'Q';
 const int PIVOT_RIGHT_COMMAND   = 'R';
@@ -60,7 +60,7 @@ const int U                     = 'U';
 const int V                     = 'V';
 const int WAIT_COMMAND          = 'W';
 const int X                     = 'X';
-const int YELLOW_GRAB_COMMAND   = 'Y';
+const int Y                     = 'Y';
 const int ZERO_COMMAND          = 'Z';
 const int UNKNOWN_COMMAND       = '?';
 
