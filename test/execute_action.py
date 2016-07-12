@@ -1,5 +1,4 @@
 import serial, sys
-dev = sys.argv[1]
  
 for dev in ['/dev/ttyACM0', '/dev/ttyUSB0']:
     for i in range(attempts):
