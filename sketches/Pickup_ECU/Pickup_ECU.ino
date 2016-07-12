@@ -291,7 +291,7 @@ int align(void) {
   // Wiggle onto line
   int x = line_detect();
   int i = 0;
-  while (i <= 20) {
+  while (i <= 5) {
     x = line_detect();
     if (x == 0) {
       set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
