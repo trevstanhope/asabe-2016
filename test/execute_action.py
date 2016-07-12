@@ -1,4 +1,4 @@
-import serial, sys
+import serial, sys, time
  
 for dev in ['/dev/ttyACM', '/dev/ttyUSB']:
     for i in range(5):
