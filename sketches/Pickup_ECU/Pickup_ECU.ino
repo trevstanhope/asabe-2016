@@ -297,43 +297,6 @@ int align(void) {
     delay(20);
   }
   set_wheel_servos(0, 0, 0, 0);
-
-  // Wiggle onto line
-  int x = line_detect();
-  int i = 0;
-  while (i <= 5) {
-    x = line_detect();
-    if (x == 0) {
-      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
-      i++;
-    }
-    else if (x == -1) {
-      set_wheel_servos(SERVO_FAST, -SERVO_MEDIUM, SERVO_FAST, -SERVO_MEDIUM);
-      i++;
-    }
-    else if (x == -2) {
-      set_wheel_servos(SERVO_FAST, -SERVO_SLOW, SERVO_FAST, -SERVO_SLOW);
-      i = 0;
-    }
-    else if (x == 1) {
-      set_wheel_servos(SERVO_MEDIUM, -SERVO_FAST, SERVO_MEDIUM, -SERVO_FAST);      
-      i++;
-    }
-    else if (x == 2) {
-      set_wheel_servos(SERVO_MEDIUM, -SERVO_FAST, SERVO_MEDIUM, -SERVO_FAST);
-      i = 0;
-    }
-    else if (x == -255) {
-      set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
-      i = 0;
-    }
-    else if (x == 255) {
-      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
-      i = 0;
-    }
-    delay(20);
-  }
-  set_wheel_servos(0, 0, 0, 0); // Halt
   return 0;
 }
 
