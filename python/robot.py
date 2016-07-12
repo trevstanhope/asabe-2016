@@ -100,9 +100,9 @@ class Robot:
             self.camera = cv2.VideoCapture(self.CAMERA_INDEX)
             self.camera.set(cv.CV_CAP_PROP_FRAME_WIDTH, self.CAMERA_WIDTH)
             self.camera.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self.CAMERA_HEIGHT)
-            #self.camera.set(cv.CV_CAP_PROP_SATURATION, self.CAMERA_SATURATION)
-            #self.camera.set(cv.CV_CAP_PROP_CONTRAST, self.CAMERA_CONTRAST)
-            #self.camera.set(cv.CV_CAP_PROP_BRIGHTNESS, self.CAMERA_BRIGHTNESS)
+            self.camera.set(cv.CV_CAP_PROP_SATURATION, self.CAMERA_SATURATION)
+            self.camera.set(cv.CV_CAP_PROP_CONTRAST, self.CAMERA_CONTRAST)
+            self.camera.set(cv.CV_CAP_PROP_BRIGHTNESS, self.CAMERA_BRIGHTNESS)
             thread.start_new_thread(self.capture_image, ())
         except Exception as e:
             self.pretty_print('CAM', 'Error: %s' % str(e))
