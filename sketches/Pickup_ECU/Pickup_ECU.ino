@@ -360,7 +360,7 @@ int transfer(void) {
       set_wheel_servos(-SERVO_FAST, -SERVO_SLOW, -SERVO_FAST, -SERVO_SLOW);
     }
     else if (x == 0) {
-      set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
+      set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
     }
     else if (x == 1) {
       set_wheel_servos(-SERVO_SLOW, -SERVO_FAST, -SERVO_SLOW, -SERVO_FAST);
