@@ -22,13 +22,11 @@ This will prompt for a password, which is 'raspberry'. If successful, you have n
 to the robot via a terminal shell. The terminal will now show you the filesystem of the Pi.
 To pull the latest changes and upload them to the robot, run the following if using the Picker:
 
-    cd ~/asabe-2016/sketches/Picker_ECU
-    ./compile
+    cd ~/asabe-2016/sketches/Picker_ECU && ./compile
 
 If connect to the Delivery bot, instead upload the Delivery_ECU code:
 
-    cd ~/asabe-2016/sketches/Delivery_ECU
-    ./compile
+    cd ~/asabe-2016/sketches/Delivery_ECU && ./compile
 
 To test the commands, you can use the execute_action.py tool. This simply allows you to send 
 character commands over serial to the Arduino and print out the response:
