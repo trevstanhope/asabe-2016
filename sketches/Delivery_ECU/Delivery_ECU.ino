@@ -93,13 +93,13 @@ int orange_balls = 0;
 int green_balls = 0;
 
 /* --- Helper Functions --- */
+// These functions are not actions, but are often called by actions
 void set_wheel_servos(int fl, int fr, int bl, int br) {
   pwm.setPWM(FRONT_LEFT_WHEEL_SERVO, 0, SERVO_OFF + fl + FL);
   pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + fr + FR);
   pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + bl + BL);
   pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + br + BR);
 }
-
 int line_detect(void) {
   int l = analogRead(LEFT_LINE_PIN);
   int c = analogRead(CENTER_LINE_PIN);
@@ -146,6 +146,8 @@ void setup() {
 }
 
 /* --- Loop --- */
+// For each command specified in the *--- Prototypes ---* section, it must be specified here
+// as a recognized character which is associated with an action function
 void loop() {
   if (Serial.available() > 0) {
     char command = Serial.read();
@@ -191,7 +193,8 @@ void loop() {
   }
 }
 
-/* --- Actions --- */
+/* --- Action Functions --- */
+// These functions are complete actions which are executed by sequentially by robot
 // 1. Jump out of the starting zone to the 2nd line
 int jump(void) {
   set_wheel_servos(SERVO_FAST, -SERVO_FAST, SERVO_FAST, -SERVO_FAST);
@@ -252,12 +255,10 @@ int align(void) {
 }
 
 // 3. Follow line to intersection
+// #!TODO
 int follow_line(void) {
-  
-  // Prepare for movement
+  // Search until all line sensors are over tape (i.e. at the end)
   int x = line_detect();
-
-  // Search until end
   if (x == 255) {
     while (x == 255) {
       x = line_detect();
@@ -298,6 +299,7 @@ int follow_line(void) {
 }
 
 // 4. Turn and enter the transfer zone
+// #!TODO
 int turn_into_transfer_zone(void) {
   set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
   return 0;
@@ -310,6 +312,7 @@ int wait(void) {
 }
 
 // 6. Reverse to End
+// #!TODO
 int reverse_to_end(void) {
   int x = line_detect();
   int skipped_intersections = 0;
@@ -343,6 +346,7 @@ int reverse_to_end(void) {
 }
 
 // 7. Drop Balls
+// #!TODO
 int drop_balls(void) {
   pwm.setPWM(GREEN_ARM_MICROSERVO, 0, MICROSERVO_MAX);
   pwm.setPWM(YELLOW_ARM_MICROSERVO, 0, MICROSERVO_MIN);
