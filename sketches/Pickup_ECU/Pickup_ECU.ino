@@ -364,7 +364,7 @@ int transfer(void) {
       }
     }
     else if ((x == -1) || (x == 0) || (x == 1)) {
-      set_wheel_servos(-SERVO_FAST, SERVO_SLOW, -SERVO_FAST, SERVO_SLOW);
+      set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
     }
     else if (x == 2) {
       set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
@@ -380,7 +380,7 @@ int transfer(void) {
       break;
     }
     else if (x == -255) {
-      set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
+      set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
       while (line_detect() == -255) {
         delay(1);
       }
