@@ -3,10 +3,12 @@
 ## Commiting changes on the server
 After making some changes in the code folder ~/Public/git/asabe-2016
 hey must be committed and pushed to the remote code repository on github. 
-To do so, open a terminal from the asabe-2016 folder and run:
+To do so, open a terminal from the asabe-2016 folder and use the git tool:
 
     git commit -a -m "some message about the change"
     git push
+
+NOTE: This will prompt you for your username and password for your github account.
 
 ## Connecting to the robot
 Open the browser and navigate to 192.168.0.1
@@ -16,8 +18,8 @@ Next, open a terminal and run:
 
     ssh pi@192.168.0.xxx
 
-This will prompt for a password, which is 'raspberry'. If successful, you have logged in
-to the robot and now the terminal is showing you the filesystem of the Pi.
+This will prompt for a password, which is 'raspberry'. If successful, you have now logged in
+to the robot via a terminal shell. The terminal will now show you the filesystem of the Pi.
 To pull the latest changes and upload them to the robot, run the following if using the Picker:
 
     cd ~/asabe-2016/sketches/Picker_ECU
@@ -28,10 +30,14 @@ If connect to the Delivery bot, instead upload the Delivery_ECU code:
     cd ~/asabe-2016/sketches/Delivery_ECU
     ./compile
 
-To test hte commands, you can use the execute_action.py tool. This simply allows you to send 
+To test the commands, you can use the execute_action.py tool. This simply allows you to send 
 character commands over serial to the Arduino and print out the response:
  
     python ~/asabe-2016/test/execute_action.py
+	
+Now you can type in some single letter command (J), or command with a
+numeric value following it (F1000), and the robot will perform the
+action returning a result string.
 
 ## Arduino Commands
 ### Picker Robot
