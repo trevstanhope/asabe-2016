@@ -355,18 +355,26 @@ int transfer(void) {
     x = line_detect();
     if (x == -2) {
       set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
-    }
-    else if (x == -1) {
-      set_wheel_servos(-SERVO_FAST, SERVO_SLOW, -SERVO_FAST, SERVO_SLOW);
-    }
-    else if (x == 0) {
+      delay(100);
       set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
+      while (true) {
+        x = line_detect();
+        if (x == -1 || x == 0 || x == 1) { break; }
+        delay(20);
+      }
     }
-    else if (x == 1) {
-      set_wheel_servos(-SERVO_SLOW, SERVO_FAST, -SERVO_SLOW, SERVO_FAST);
+    else if ((x == -1) || (x == 0) || (x == 1)) {
+      set_wheel_servos(-SERVO_FAST, SERVO_SLOW, -SERVO_FAST, SERVO_SLOW);
     }
     else if (x == 2) {
       set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
+      delay(100);
+      set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
+      while (true) {
+        delay(20);
+        if (x == -1 || x == 0 || x == 1) { break; }
+        delay(20);
+      }
     }
     else if (x == 255) {
       break;
@@ -376,9 +384,8 @@ int transfer(void) {
       while (line_detect() == -255) {
         delay(1);
       }
-      set_wheel_servos(0,0,0,0);
     }
-    delay(100);
+    set_wheel_servos(0,0,0,0);
   }
   set_wheel_servos(0, 0, 0, 0); // Stop servos
   // TODO ADD SWITCH
