@@ -355,37 +355,25 @@ int transfer(void) {
     x = line_detect();
     if (x == -2) {
       set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
-      delay(100);
-      set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
-      while (true) {
-        x = line_detect();
-        if (x == -1 || x == 0 || x == 1) { break; }
-        delay(20);
-      }
     }
-    else if ((x == -1) || (x == 0) || (x == 1)) {
-      set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
+    else if (x == -1) {
+      set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_SLOW, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_SLOW);      
+    }
+    else if (x == 0) {
+      set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);      
+    }
+    else if (x == 1) {
+      set_wheel_servos(-(SERVO_SLOW + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_SLOW + BACKUP_CORRECTION), SERVO_MEDIUM);
     }
     else if (x == 2) {
       set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
-      delay(100);
-      set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
-      while (true) {
-        delay(20);
-        if (x == -1 || x == 0 || x == 1) { break; }
-        delay(20);
-      }
     }
     else if (x == 255) {
       break;
     }
     else if (x == -255) {
       set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
-      while (line_detect() == -255) {
-        delay(1);
-      }
     }
-    set_wheel_servos(0,0,0,0);
   }
   set_wheel_servos(0, 0, 0, 0); // Stop servos
   // TODO ADD SWITCH
