@@ -2,7 +2,7 @@
 
 ## Commiting changes on the server
 After making some changes in the code folder ~/Public/git/asabe-2016
-hey must be committed and pushed to the remote code repository on github. 
+They must be committed and pushed to the remote code repository on github. 
 To do so, open a terminal from the asabe-2016 folder and use the git tool:
 
     git commit -a -m "some message about the change"
@@ -22,7 +22,7 @@ This will prompt for a password, which is 'raspberry'. If successful, you have n
 to the robot via a terminal shell. The terminal will now show you the filesystem of the Pi.
 To pull the latest changes and upload them to the robot, run the following if using the Picker:
 
-    cd ~/asabe-2016/sketches/Picker_ECU && ./compile
+    cd ~/asabe-2016/sketches/Pickup_ECU && ./compile
 
 If connect to the Delivery bot, instead upload the Delivery_ECU code:
 
