@@ -1,5 +1,11 @@
 # ASABE 2016
 
+    ssh pi@192.168.0.xxx
+    
+    cd asabe-2016/sketches/Picker_ECU
+    ./compile
+    python ../../test/execute_action.py
+
 ## Arduino Commands
 ### Picker Robot
 1. Follow line to end
