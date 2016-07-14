@@ -87,7 +87,7 @@ const int ARM_EXTENSION_ACTUATOR = 7;
 // PWM Settings
 // Servo limit values are the pulse length count (out of 4096)
 const int MICROSERVO_FRONT_MIN = 160;
-const int MICOSERVO_FRONT_MAX = 520;
+const int MICROSERVO_FRONT_MAX = 520;
 const int MICROSERVO_MIN = 170;
 const int MICROSERVO_ZERO =  300;
 const int MICROSERVO_MAX =  520;
