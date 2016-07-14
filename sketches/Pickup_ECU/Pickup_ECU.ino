@@ -86,6 +86,8 @@ const int ARM_EXTENSION_ACTUATOR = 7;
 
 // PWM Settings
 // Servo limit values are the pulse length count (out of 4096)
+const int MICROSERVO_FRONT_MIN = 160;
+const int MICOSERVO_FRONT_MAX = 520
 const int MICROSERVO_MIN = 170;
 const int MICROSERVO_ZERO =  300;
 const int MICROSERVO_MAX =  520;
@@ -229,7 +231,7 @@ void loop() {
 
 /* --- Actions --- */
 int grab_green(void) {
-  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MAX); // Sets gate to green
+  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_FRONT_MAX); // Sets gate to green
   pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX);
   delay(ARM_LIFT_DELAY);
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
@@ -242,7 +244,7 @@ int grab_green(void) {
 }
 
 int grab_orange(void) {
-  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MIN); // Sets gate to yellow
+  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_FRONT_MIN); // Sets gate to yellow
   pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX);
   delay(ARM_LIFT_DELAY);
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
