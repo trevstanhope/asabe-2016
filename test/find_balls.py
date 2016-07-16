@@ -83,7 +83,10 @@ for f in fnames:
             if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
                 cv2.circle(bgr, (int(x), int(y)), int(radius), (0, 255, 255), 2)
                 cv2.circle(bgr, center, 5, (0, 0, 255), -1)
-    cv2.imshow("bgr", np.hstack((bgr, np.dstack((orange_mask, orange_mask, orange_mask)), np.dstack((green_mask, green_mask, green_mask)))))
+    blank = np.zeros((480,640), np.uint8)
+    orange = np.dstack((blank, orange_mask, orange_mask))
+    green = np.dstack((blank, green_mask, blank))
+    cv2.imshow("bgr", np.hstack((bgr, orange + green)))
     key = cv2.waitKey(0)
  
 cv2.destroyAllWindows()

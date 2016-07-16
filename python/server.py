@@ -101,7 +101,7 @@ class Server:
     ### State-Machine Functions ###
     def __init_statemachine__(self):
         self.bgr = cv2.imread(self.GUI_CAMERA_IMAGE)
-        self.mask = cv2.imread(self.GUI_CAMERA_IMAGE)
+        self.mask = cv2.imread(self.GUI_MASK_IMAGE)
         self.running = False
         self.start_time = time.time()
         self.end_time = self.start_time + self.RUN_TIME
@@ -413,7 +413,7 @@ class GUI(object):
             self.label_clock.show()
             self.vbox2.add(self.label_clock)
             self.camera_bgr = cv2.imread(object.GUI_CAMERA_IMAGE)
-            self.camera_mask = cv2.imread(object.GUI_CAMERA_IMAGE)
+            self.camera_mask = cv2.imread(object.GUI_MASK_IMAGE)
             self.camera_pix = gtk.gdk.pixbuf_new_from_array(self.camera_bgr, gtk.gdk.COLORSPACE_RGB, 8)
             self.camera_pix_mask = gtk.gdk.pixbuf_new_from_array(self.camera_mask, gtk.gdk.COLORSPACE_RGB, 8)
             self.camera_img = gtk.Image()
