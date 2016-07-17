@@ -64,6 +64,7 @@ const int RIGHT_LINE_PIN = A2;
 // A4 - A5 reserved
 const int XBEE_RX_PIN = 2;
 const int XBEE_TX_PIN = 3;
+const int BACKUP_SWITCH_PIN = 7;
 
 // Channels
 const int FRONT_LEFT_WHEEL_SERVO = 0;
@@ -107,6 +108,9 @@ void set_wheel_servos(int fl, int fr, int bl, int br) {
   pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + fr + FR);
   pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + bl + BL);
   pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + br + BR);
+}
+int check_switch(void) {
+  return digitalRead(BACKUP_SWITCH_PIN);
 }
 int line_detect(void) {
   int l = analogRead(LEFT_LINE_PIN);
@@ -368,7 +372,11 @@ int reverse_to_end(void) {
     else if (x == 255) {
       skipped_intersections++;
     }
+    else if (check_switch()) {
+      break;
+    }
   }
+  set_wheel_servos(0, 0, 0, 0); // Halt 
   return 0;
 }
 

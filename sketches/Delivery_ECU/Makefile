@@ -14,5 +14,5 @@ ARDUINO_DIR  = /usr/share/arduino
 TARGET       = Delivery_ECU
 BOARD_TAG    = uno
 ARDUINO_PORT = /dev/ttyACM0
-ARDUINO_LIBS = Adafruit_PWMServoDriver Wire
+ARDUINO_LIBS = Adafruit_PWMServoDriver Wire SoftwareSerial
 include /usr/share/arduino/Arduino.mk

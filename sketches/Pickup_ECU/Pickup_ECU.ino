@@ -20,6 +20,7 @@ int zero(void);
 int center_manuever(void);
 int edge_manuever(void);
 int jump(void);
+int check_switch(void);
 
 /* --- Constants --- */
 // Time intevals
@@ -29,8 +30,8 @@ const int TURN60_INTERVAL = 3000;
 const int TURN90_INTERVAL = 4000;
 const int SWEEP45_INTERVAL = 3500;
 const int SWEEP90_INTERVAL = 5000;
-const int ARM_LIFT_DELAY = 2000;
-const int ARM_EXTENSION_DELAY = 100;
+const int ARM_LIFT_DELAY = 500;
+const int ARM_EXTENSION_DELAY = 8000;
 const int SORTING_GATE_DELAY = 500;
 
 // Serial Commands
@@ -97,11 +98,10 @@ const int MICROSERVO_ZERO =  300;
 const int MICROSERVO_MAX =  520;
 const int SERVO_MIN = 300;
 const int SERVO_MAX =  460;
-// const int SERVO_MAX =  550; 90
-const int HEAVYSERVO_MIN = 300;
-const int HEAVYSERVO_MAX =  400; //Was 450
+const int HEAVYSERVO_MIN = 350;//was 250
+const int HEAVYSERVO_MAX =  550; // perfect
 const int ACTUATOR_MIN = 240;
-const int ACTUATOR_MAX = 350;
+const int ACTUATOR_MAX = 330;
 const int PWM_FREQ = 60; // analog servos run at 60 Hz
 const int SERVO_SLOW = 10;
 const int SERVO_MEDIUM = 20;
@@ -149,7 +149,9 @@ int line_detect(void) {
   }
   return x;
 }
-
+int check_switch(void) {
+  return digitalRead(BACKUP_SWITCH_PIN);
+}
 void set_wheel_servos(int fl, int fr, int bl, int br) {
   pwm.setPWM(FRONT_LEFT_WHEEL_SERVO, 0, fl + FRONT_LEFT_ZERO);
   pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, fr + FRONT_RIGHT_ZERO);
@@ -382,7 +384,7 @@ int transfer(void) {
     else if (x == -255) {
       set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
     }
-    if (digitalRead(BACKUP_SWITCH_PIN)) { break; } // stop at the wall
+    if (check_switch()) { break; } // stop at the wall
   }
   set_wheel_servos(0, 0, 0, 0); // Stop servos
   pwm.setPWM(REAR_GATE_MICROSERVO, 0, MICROSERVO_ZERO);
