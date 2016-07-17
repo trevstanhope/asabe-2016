@@ -1,0 +1,2 @@
+read -p "IP Address: " IP
+scp execute_action.py pi@$IP
