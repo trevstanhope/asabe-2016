@@ -14,12 +14,11 @@ while True:
     try:
         c = raw_input('Enter command: ')
         s.write(c)
-        while True:
-            try:
-                r = s.readline()
-                print r
-            except Exception as e:
-                break
+        try:
+            r = s.readline()
+            if r is not '': print r
+        except Exception as e:
+            break
     except KeyboardInterrupt:
         break
     except Exception as e:

@@ -91,11 +91,14 @@ const int OFFSET_SAMPLES = 1;
 
 /// PWM Settings
 // Servo limit values are the pulse length count (out of 4096)
-const int MICROSERVO_SORTING_GATE_MIN = 180;
-const int MICROSERVO_SORTING_GATE_MAX = 520;
+const int MICROSERVO_SORTING_GATE_MIN = 200;
+const int MICROSERVO_SORTING_GATE_MAX = 550;
 const int MICROSERVO_MIN = 170;
 const int MICROSERVO_ZERO =  300;
 const int MICROSERVO_MAX =  520;
+const int GATE_MICROSERVO_CLOSED = 250;
+const int GATE_MICROSERVO_OPEN = 570;
+const int GATE_MICROSERVO_OFF = 0;
 const int SERVO_MIN = 300;
 const int SERVO_MAX =  460;
 const int HEAVYSERVO_MIN = 350;//was 250
@@ -172,8 +175,8 @@ void setup() {
   pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, BACK_LEFT_ZERO);
   pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, BACK_RIGHT_ZERO);
   pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MIN);
-  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MAX);
-  pwm.setPWM(REAR_GATE_MICROSERVO, 0, MICROSERVO_MAX);
+  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_SORTING_GATE_MAX);
+  pwm.setPWM(REAR_GATE_MICROSERVO, 0, GATE_MICROSERVO_CLOSED);
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MIN);
 }
 
@@ -387,7 +390,9 @@ int transfer(void) {
     if (check_switch()) { break; } // stop at the wall
   }
   set_wheel_servos(0, 0, 0, 0); // Stop servos
-  pwm.setPWM(REAR_GATE_MICROSERVO, 0, MICROSERVO_ZERO);
+  pwm.setPWM(REAR_GATE_MICROSERVO, 0, GATE_MICROSERVO_OPEN);
+  delay(WAIT_INTERVAL);
+  pwm.setPWM(REAR_GATE_MICROSERVO, 0, GATE_MICROSERVO_OFF);
   return 0;
 }
 

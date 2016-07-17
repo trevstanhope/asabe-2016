@@ -3,11 +3,13 @@
 #include <Adafruit_PWMServoDriver.h>
 #include <math.h>
 #include <SoftwareSerial.h>
+#include <RunningMedian.h>
 
 /* --- Prototypes --- */
 int turn_into_transfer_zone(void);
 void set_wheel_servos(int, int, int, int);
 int drop_balls(void);
+int up_wings(void);
 int wait(void);
 int follow_line(void);
 int align(void);
@@ -18,9 +20,11 @@ void start_clock(void);
 void stop_clock(void);
 
 /* --- Constants --- */
-// Time 
+// Time
 const int WAIT_INTERVAL = 100;
-const int JUMP_INTERVAL = 5000;
+const int STEP_INTERVAL = 1000;
+const int JUMP_INTERVAL = 1000;
+const int TURN90_INTERVAL = 2500;
 
 // Serial Commands
 const int BAUD = 9600;
@@ -45,7 +49,7 @@ const int Q                     = 'Q';
 const int REVERSE_COMMAND       = 'R';
 const int SEEK_COMMAND          = 'S';
 const int TURN_COMMAND          = 'T';
-const int U                     = 'U';
+const int UP_COMMAND            = 'U';
 const int V                     = 'V';
 const int WAIT_COMMAND          = 'W';
 const int X                     = 'X';
@@ -54,8 +58,8 @@ const int Z                     = 'Z';
 const int UNKNOWN_COMMAND       = '?';
 
 /// Line Threshold
-const int LINE_THRESHOLD = 500; // i.e. 2.5 volts
-const int OFFSET_SAMPLES = 1;
+const int LINE_THRESHOLD = 250; // i.e. 2.5 volts
+const int OFFSET_SAMPLES = 5;
 
 /// I/O Pins
 const int LEFT_LINE_PIN = A0;
@@ -71,13 +75,14 @@ const int FRONT_LEFT_WHEEL_SERVO = 0;
 const int FRONT_RIGHT_WHEEL_SERVO = 1;
 const int BACK_LEFT_WHEEL_SERVO = 2;
 const int BACK_RIGHT_WHEEL_SERVO = 3;
-const int YELLOW_ARM_MICROSERVO = 4;
-const int GREEN_ARM_MICROSERVO = 5;
+const int ORANGE_ARM_MICROSERVO = 4; // left
+const int GREEN_ARM_MICROSERVO = 5; // right
 
 // PWM Settings
-const int MICROSERVO_MIN = 150;
-const int MICROSERVO_ZERO = 225; // this is the servo off pulse length
-const int MICROSERVO_MAX =  600; // this is the 'maximum' pulse length count (out of 4096)
+const int GREEN_MICROSERVO_MIN = 410;
+const int GREEN_MICROSERVO_MAX =  220; // this is the 'maximum' pulse length count (out of 4096)
+const int ORANGE_MICROSERVO_MIN = 130; //UP position
+const int ORANGE_MICROSERVO_MAX =  330; // DOWN position this is the 'maximum' pulse length count (out of 4096)
 const int SERVO_MIN = 300;
 const int SERVO_OFF = 335; // this is the servo off pulse length
 const int SERVO_MAX =  460; // this is the 'maximum' pulse length count (out of 4096)
@@ -85,15 +90,16 @@ const int PWM_FREQ = 60; // analog servos run at 60 Hz
 const int SERVO_SLOW = 10;
 const int SERVO_MEDIUM = 20;
 const int SERVO_FAST = 30;
-const int FR = 3;
-const int FL = 8;
-const int BR = 10;
-const int BL = 3;
+const int FR = 13;
+const int FL = 19;
+const int BR = 21;
+const int BL = 13;
 
+// For Shield #
 /* --- Variables --- */
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
 SoftwareSerial xbee(XBEE_RX_PIN, XBEE_TX_PIN);   // 2 = Rx  3 = Tx
-
+RunningMedian line_offset = RunningMedian(OFFSET_SAMPLES);;
 char command;
 int result;
 char output[OUTPUT_LENGTH];
@@ -136,35 +142,34 @@ int line_detect(void) {
     x = -255; // off entirely
   }
   else {
-    x = 255; // at a T
+    x = 255;
   }
   return x;
 }
 void start_clock(void) {
-  sprintf(xbee_buffer,"0,0,0,%d,%d,0\r\n", green_balls, orange_balls);
+  sprintf(xbee_buffer, "0,0,0,%d,%d,0\r\n", green_balls, orange_balls);
   xbee.println(xbee_buffer);
 }
 void stop_clock(void) {
-  sprintf(xbee_buffer,"0,0,0,%d,%d,1\r\n", green_balls, orange_balls);
+  sprintf(xbee_buffer, "0,0,0,%d,%d,1\r\n", green_balls, orange_balls);
   xbee.println(xbee_buffer);
 }
 
 
 /* --- Setup --- */
 void setup() {
-  
+
   // USB
   Serial.begin(BAUD);
-  
+
   // Pins
   pinMode(CENTER_LINE_PIN, INPUT);
   pinMode(RIGHT_LINE_PIN, INPUT);
   pinMode(LEFT_LINE_PIN, INPUT);
-  
+
   // XBEE
   xbee.begin(BAUD);
-  start_clock();
-  
+
   // PWM
   pwm.begin();
   pwm.setPWMFreq(PWM_FREQ);  // This is the ideal PWM frequency for servos
@@ -172,8 +177,8 @@ void setup() {
   pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + FR);
   pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + BL);
   pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + BR);
-  pwm.setPWM(GREEN_ARM_MICROSERVO, 0, MICROSERVO_MIN);
-  pwm.setPWM(YELLOW_ARM_MICROSERVO, 0, MICROSERVO_MAX);
+  pwm.setPWM(GREEN_ARM_MICROSERVO, 0, GREEN_MICROSERVO_MIN);
+  pwm.setPWM(ORANGE_ARM_MICROSERVO, 0, ORANGE_MICROSERVO_MIN);
 }
 
 /* --- Loop --- */
@@ -186,7 +191,7 @@ void loop() {
     switch (command) {
       case ALIGN_COMMAND:
         result = align();
-        break;      
+        break;
       case TURN_COMMAND:
         result = turn_into_transfer_zone();
         break;
@@ -196,16 +201,19 @@ void loop() {
       case DROP_BALLS_COMMAND:
         result = drop_balls();
         break;
+      case UP_COMMAND:
+        result = up_wings();
+        break;
       case JUMP_COMMAND:
         result = jump();
         break;
       case ORANGE_COUNT_COMMAND:
         result = 0;
-        orange_balls++;
+        orange_balls = value;
         break;
       case GREEN_COUNT_COMMAND:
         result = 0;
-        green_balls++;
+        green_balls = value;
         break;
       case LINE_COMMAND:
         result = line_detect();
@@ -218,7 +226,7 @@ void loop() {
         command = UNKNOWN_COMMAND;
         break;
     }
-    sprintf(output, "{'command':'%c','result':%d}", command, result);
+    sprintf(output, "{'command':'%c','result':%d,'left':%d,'center':%d,'right':%d}", command, result, analogRead(LEFT_LINE_PIN), analogRead(CENTER_LINE_PIN), analogRead(RIGHT_LINE_PIN));
     Serial.println(output);
     Serial.flush();
   }
@@ -230,7 +238,7 @@ void loop() {
 int jump(void) {
   set_wheel_servos(SERVO_FAST, -SERVO_FAST, SERVO_FAST, -SERVO_FAST);
   delay(JUMP_INTERVAL);
-  while (line_detect() == -255) { 
+  while (line_detect() == -255) {
     delay(WAIT_INTERVAL); // Drive until a line is reached
   }
   set_wheel_servos(0, 0, 0, 0);
@@ -247,6 +255,7 @@ int align(void) {
   // Wiggle
   int i = 0;
   int x = line_detect();
+  
   while (i <= 20) {
     if (x == 0) {
       set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
@@ -273,15 +282,15 @@ int align(void) {
       i = 0;
     }
     else if (x == 255) {
-      while (line_detect() == 255) {
-        set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
-      }
-      i = 0;
+      // Turn 90
+      set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
+      delay(TURN90_INTERVAL);
+      break;
     }
     delay(WAIT_INTERVAL);
     x = line_detect();
   }
-  set_wheel_servos(0, 0, 0, 0); // Halt 
+  set_wheel_servos(0, 0, 0, 0); // Halt
   return 0;
 }
 
@@ -314,14 +323,7 @@ int follow_line(void) {
       set_wheel_servos(30, -30, 30, -30);
     }
     else if (x == 255) {
-      set_wheel_servos(10, -10, 10, -10);
-      delay(500);
-      x = line_detect();
-      if (x == -255) {
-        set_wheel_servos(-10, 10, -10, 10);
-        delay(500);
-        break;
-      }
+      break;
     }
     delay(50);
   }
@@ -347,44 +349,49 @@ int wait(void) {
 int reverse_to_end(void) {
   int x = line_detect();
   int skipped_intersections = 0;
-  while (skipped_intersections < 2) {
-    delay(WAIT_INTERVAL);
+  while (!check_switch()) {
+    delay(50);
     x = line_detect();
     if (x == -1) {
-      set_wheel_servos(-10, 20, -10, 20);
+      set_wheel_servos(-SERVO_SLOW, SERVO_MEDIUM, -SERVO_SLOW, SERVO_MEDIUM);
     }
     else if (x == -2) {
-      set_wheel_servos(-SERVO_SLOW, -SERVO_SLOW, -SERVO_SLOW, -SERVO_SLOW);
+      set_wheel_servos(-SERVO_SLOW, SERVO_MEDIUM, -SERVO_SLOW, SERVO_MEDIUM);
     }
     else if (x == 1) {
-      set_wheel_servos(-20, 10, -20, 10);
+      set_wheel_servos(-SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW);
     }
     else if (x == 2) {
-      set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
+      set_wheel_servos(-SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW);
     }
     else if (x == 0) {
-      set_wheel_servos(-10, 10, -10, 10);
+      set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
     }
     else if (x == -255) {
-      set_wheel_servos(0, 0, 0, 0); // Halt 
-      break;
+      set_wheel_servos(-SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW);
     }
     else if (x == 255) {
-      skipped_intersections++;
+      set_wheel_servos(-SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW);
     }
-    else if (check_switch()) {
-      break;
+    else {
+      return x;
     }
   }
-  set_wheel_servos(0, 0, 0, 0); // Halt 
+  set_wheel_servos(0, 0, 0, 0); // Halt
   return 0;
 }
 
 // 7. Drop Balls
 // #!TODO
 int drop_balls(void) {
-  pwm.setPWM(GREEN_ARM_MICROSERVO, 0, MICROSERVO_MAX);
-  pwm.setPWM(YELLOW_ARM_MICROSERVO, 0, MICROSERVO_MIN);
+  pwm.setPWM(GREEN_ARM_MICROSERVO, 0, GREEN_MICROSERVO_MAX);
+  pwm.setPWM(ORANGE_ARM_MICROSERVO, 0, ORANGE_MICROSERVO_MAX);
   stop_clock();
+  return 0;
+}
+
+int up_wings(void) {
+  pwm.setPWM(GREEN_ARM_MICROSERVO, 0, GREEN_MICROSERVO_MIN);
+  pwm.setPWM(ORANGE_ARM_MICROSERVO, 0, ORANGE_MICROSERVO_MIN);
   return 0;
 }

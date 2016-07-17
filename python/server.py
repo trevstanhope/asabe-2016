@@ -133,16 +133,16 @@ class Server:
             if request['robot'] == 'picker':
                 if request['last_action'] == 'Z':
                     action = 'F5000' 
-                elif (request['last_action'] == 'F') or (request['last_action'] == 'L') or (request['last_action'] == 'R') or (request['last_action'] == 'W'):
+                elif (request['last_action'] == 'F') or (request['last_action'] == 'L') or (request['last_action'] == 'R') or (request['last_action'] == 'C') or (request['last_action'] == 'E'):
                     if (heading is not None) and (distance is not None) and (color is not None):
                         self.pretty_print("DECIDE", "Heading: %d, Distance: %d, Color: %s" % (heading, distance, color))
                         if distance < self.TARGET_DISTANCE:
                             if color == 'green':
-                                action == 'G'
-                                green_balls_collected += 1
+                                action = 'G'
+                                self.green_balls_collected += 1
                             elif color == 'orange':
-                                action == 'O'
-                                orange_balls_collected += 1
+                                action = 'O'
+                                self.orange_balls_collected += 1
                         elif heading < -self.ALIGNMENT_TOLERANCE:
                             action = 'L' + str(abs(heading))
                         elif heading > self.ALIGNMENT_TOLERANCE:
@@ -152,15 +152,22 @@ class Server:
                     else:
                         self.pretty_print("DECIDE", "No ball detected! Backing up for safety!")
                         action = 'B'
-                elif request['last_action'] == 'G' or request['last_action'] == 'O':
-                    action = 'W'
-                elif request['last_action'] == 'M':
-                    action = 'W'
-                elif request['last_action'] == 'T':
-                    action = 'W'
-                elif request['last_action'] == 'J':
-                    action = 'W'
+                elif (request['last_action'] == 'G') or (request['last_action'] == 'O'):
+                    if (self.orange_balls_collected + self.green_balls_collected == 1):
+                        action = "E"
+                    elif (self.orange_balls_collected + self.green_balls_collected == 7):
+                        action = "E"
+                    else:
+                        action = "C"
+                elif (self.orange_balls_collected + self.green_balls_collected == 8):
+                    action = 'S'
+                elif request['last_action'] == 'S':
+                    action = 'A'
                 elif request['last_action'] == 'A':
+                    action = 'J'
+                elif request['last_action'] == 'J':
+                    action = 'T'
+                elif request['last_action'] == 'T':
                     action = 'W'
                 elif request['last_action'] == '?':
                     action = '?'
@@ -170,7 +177,7 @@ class Server:
                     self.pretty_print("WARNING", "Unsupported PICKER action!")
             ## Delivery
             elif request['robot'] == 'delivery':
-                if request['last_action'] == 'Z': # Zero
+                if request['last_action'] == 'Z':
                     action = 'J' 
                 elif request['last_action'] == 'J':
                     action = 'A' 
@@ -179,14 +186,14 @@ class Server:
                 elif request['last_action'] == 'F':  
                     action = 'T' 
                 elif request['last_action'] == 'T':
-                    action = 'W' 
+                    action = 'W'
                 elif request['last_action'] == 'R':
-                    action = 'D' 
-                elif request['last_action'] == 'D':
-                    action = 'W'
-                elif request['last_action'] == 'O':
-                    action = 'W'
+                    action = 'G' + str(green_balls_collected)
                 elif request['last_action'] == 'G':
+                    action = 'O' + str(orange_balls_collected)
+                elif request['last_action'] == 'O':
+                    action = 'D'
+                elif request['last_action'] == 'D':
                     action = 'W'
                 elif request['last_action'] == '?':
                     action = '?'
@@ -204,7 +211,7 @@ class Server:
         return action
 
     ### Computer Vision ###
-    def find_ball(self, bgr, RADIUS_MIN=10, RADIUS_MAX=160):
+    def find_ball(self, bgr, RADIUS_MIN=10, RADIUS_MAX=120):
         """
         Find the contours for both masks, then use these
         to compute the minimum enclosing circle and centroid
@@ -229,6 +236,9 @@ class Server:
         orange_bgr = np.dstack((self.blank, orange_mask, orange_mask)) # set self.mask to be accessed by the GUI
         green_bgr = np.dstack((self.blank, green_mask, self.blank)) # set self.mask to be accessed by the GUI
         detected_balls = []
+        gray_circles = cv2.HoughCircles(cv2.cvtColor(bgr, cv.CV_BGR2GRAY), cv.CV_HOUGH_GRADIENT, 4.0, 2)
+        if gray_circles is not None:
+            gray_circles = np.round(gray_circles[0, :]).astype("int")
 
         # Green Contours
         green_contours = cv2.findContours(green_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
@@ -236,41 +246,39 @@ class Server:
         if len(green_contours) > 0: # only proceed if at least one contour was found
             for c in green_contours:
                 ((x, y), radius) = cv2.minEnclosingCircle(c)
-                k = cv2.isContourConvex(c)
-                area = cv2.contourArea(c)
-                estimated_area = np.pi * radius ** 2.0
                 if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
-                    if abs(estimated_area - area) / float(estimated_area) < 0.2:
-                        detected_balls.append((x,y,radius,'green'))
+                    if gray_circles is not None:
+                        for (x2,y2,r2) in gray_circles:
+                            d = np.sqrt((x - x2)**2 + (y - y2)**2)
+                            if d < 10 and (r2 > RADIUS_MIN) and (r2 < RADIUS_MAX):
+                                detected_balls.append((x,y,radius,'green'))
+                                cv2.circle(bgr, (int(x2), int(y2)), int(r2), (0, 255, 0), 2)
                     else:
                         cv2.putText(green_bgr, 'X', (int(x)-10,int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-                else:
-                    self.pretty_print("CV2", "Rejecting wrong sized circles")
+
         # Orange Contours
         orange_contours = cv2.findContours(orange_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
         center = None # initialize the current (x, y) center of the ball
         if len(orange_contours) > 0: # only proceed if at least one contour was found
             for c in orange_contours:
                 ((x, y), radius) = cv2.minEnclosingCircle(c)
-                k = cv2.isContourConvex(c)
-                area = cv2.contourArea(c)
-                estimated_area = np.pi * radius ** 2.0
                 if (radius >= RADIUS_MIN) and (radius <= RADIUS_MAX): # only proceed if the radius meets a minimum size
-                    if abs(estimated_area - area) / float(estimated_area) < 0.2:
-                        detected_balls.append((x,y,radius,'orange'))
+                    if gray_circles is not None:
+                        for (x2,y2,r2) in gray_circles:
+                            d = np.sqrt((x - x2)**2 + (y - y2)**2)
+                            if d < 10 and (r2 > RADIUS_MIN) and (r2 < RADIUS_MAX):
+                                detected_balls.append((x,y,r2,'orange'))
+                                cv2.circle(bgr, (int(x2), int(y2)), int(r2), (0, 255, 255), 2)
                     else:
                         cv2.putText(orange_bgr, 'X', (int(x)-10,int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-                else:
-                    self.pretty_print("CV2", "Rejecting circles for being too unfilled")
+
         # Draw
         if len(detected_balls) > 0:
             for x,y,r,color in detected_balls:
                 d = self.estimate_distance(y,r)
                 if color == 'green':
-                    cv2.circle(bgr, (int(x), int(y)), int(r), (0, 255, 0), 2)
                     cv2.putText(bgr, str(d), (int(x)+10, int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
                 if color == 'orange':
-                    cv2.circle(bgr, (int(x), int(y)), int(r), (0, 255, 255), 2)
                     cv2.putText(bgr, str(d), (int(x)+10, int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
             x,y,r,c = max(detected_balls) # return the farthest to the right, use min() for left
             cv2.circle(bgr, (int(x),int(y)), 3, (0, 0, 255), -1)
