@@ -9,6 +9,7 @@ for dev in ['/dev/ttyACM', '/dev/ttyUSB']:
         except Exception as e:
             print str(e)
 
+time.sleep(1)
 while True:
     try:
         c = raw_input('Enter command: ')
@@ -18,7 +19,8 @@ while True:
                 r = s.readline()
                 print r
             except Exception as e:
-                print str(e)
                 break
     except KeyboardInterrupt:
         break
+    except Exception as e:
+        print str(e)

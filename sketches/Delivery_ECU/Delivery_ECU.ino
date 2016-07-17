@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 #include <math.h>
+#include <SoftwareSerial.h>
 
 /* --- Prototypes --- */
 int turn_into_transfer_zone(void);
@@ -13,6 +14,8 @@ int align(void);
 int reverse_to_end(void);
 int jump(void);
 int line_detect(void);
+void start_clock(void);
+void stop_clock(void);
 
 /* --- Constants --- */
 // Time 
@@ -50,15 +53,17 @@ const int Y                     = 'Y';
 const int Z                     = 'Z';
 const int UNKNOWN_COMMAND       = '?';
 
+/// Line Threshold
 const int LINE_THRESHOLD = 500; // i.e. 2.5 volts
 const int OFFSET_SAMPLES = 1;
-const int MIN_ACTIONS = 25; // was 35
 
-// I/O Pins
+/// I/O Pins
 const int LEFT_LINE_PIN = A0;
 const int CENTER_LINE_PIN = A1;
 const int RIGHT_LINE_PIN = A2;
 // A4 - A5 reserved
+const int XBEE_RX_PIN = 2;
+const int XBEE_TX_PIN = 3;
 
 // Channels
 const int FRONT_LEFT_WHEEL_SERVO = 0;
@@ -86,9 +91,12 @@ const int BL = 3;
 
 /* --- Variables --- */
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
+SoftwareSerial xbee(XBEE_RX_PIN, XBEE_TX_PIN);   // 2 = Rx  3 = Tx
+
 char command;
 int result;
 char output[OUTPUT_LENGTH];
+char xbee_buffer[OUTPUT_LENGTH];
 int orange_balls = 0;
 int green_balls = 0;
 
@@ -128,13 +136,32 @@ int line_detect(void) {
   }
   return x;
 }
+void start_clock(void) {
+  sprintf(xbee_buffer,"0,0,0,%d,%d,0\r\n", green_balls, orange_balls);
+  xbee.println(xbee_buffer);
+}
+void stop_clock(void) {
+  sprintf(xbee_buffer,"0,0,0,%d,%d,1\r\n", green_balls, orange_balls);
+  xbee.println(xbee_buffer);
+}
+
 
 /* --- Setup --- */
 void setup() {
+  
+  // USB
   Serial.begin(BAUD);
+  
+  // Pins
   pinMode(CENTER_LINE_PIN, INPUT);
   pinMode(RIGHT_LINE_PIN, INPUT);
   pinMode(LEFT_LINE_PIN, INPUT);
+  
+  // XBEE
+  xbee.begin(BAUD);
+  start_clock();
+  
+  // PWM
   pwm.begin();
   pwm.setPWMFreq(PWM_FREQ);  // This is the ideal PWM frequency for servos
   pwm.setPWM(FRONT_LEFT_WHEEL_SERVO, 0, SERVO_OFF + FL);
@@ -350,5 +377,6 @@ int reverse_to_end(void) {
 int drop_balls(void) {
   pwm.setPWM(GREEN_ARM_MICROSERVO, 0, MICROSERVO_MAX);
   pwm.setPWM(YELLOW_ARM_MICROSERVO, 0, MICROSERVO_MIN);
+  stop_clock();
   return 0;
 }

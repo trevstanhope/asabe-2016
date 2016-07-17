@@ -64,15 +64,15 @@ const int Y                     = 'Y';
 const int ZERO_COMMAND          = 'Z';
 const int UNKNOWN_COMMAND       = '?';
 
-// Line Tracking
-const int LINE_THRESHOLD = 500; // i.e. 2.5 volts
-const int OFFSET_SAMPLES = 1;
+/// I/O Pins
 const int LEFT_LINE_PIN = A0;
 const int RIGHT_LINE_PIN = A2;
 const int CENTER_LINE_PIN = A1;
-// A4 - A5 reserved
+// const int A4_RESERVED = A4;
+// const int A5_RESERVED = A5;
+const int BACKUP_SWITCH_PIN = 7;
 
-// Servo Channels
+/// Servo Channels
 // Bank 1
 const int FRONT_LEFT_WHEEL_SERVO = 0;
 const int FRONT_RIGHT_WHEEL_SERVO = 1;
@@ -84,19 +84,24 @@ const int REAR_GATE_MICROSERVO = 4;
 const int ARM_LIFT_HEAVYSERVO = 6;
 const int ARM_EXTENSION_ACTUATOR = 7;
 
-// PWM Settings
+// Line Tracking
+const int LINE_THRESHOLD = 500; // i.e. 2.5 volts
+const int OFFSET_SAMPLES = 1;
+
+/// PWM Settings
 // Servo limit values are the pulse length count (out of 4096)
-const int MICROSERVO_FRONT_MIN = 180;
-const int MICROSERVO_FRONT_MAX = 520;
+const int MICROSERVO_SORTING_GATE_MIN = 180;
+const int MICROSERVO_SORTING_GATE_MAX = 520;
 const int MICROSERVO_MIN = 170;
 const int MICROSERVO_ZERO =  300;
 const int MICROSERVO_MAX =  520;
 const int SERVO_MIN = 300;
 const int SERVO_MAX =  460;
+// const int SERVO_MAX =  550; 90
 const int HEAVYSERVO_MIN = 300;
-const int HEAVYSERVO_MAX =  550;
-const int ACTUATOR_MIN = 300;
-const int ACTUATOR_MAX = 460;
+const int HEAVYSERVO_MAX =  400; //Was 450
+const int ACTUATOR_MIN = 240;
+const int ACTUATOR_MAX = 350;
 const int PWM_FREQ = 60; // analog servos run at 60 Hz
 const int SERVO_SLOW = 10;
 const int SERVO_MEDIUM = 20;
@@ -167,7 +172,7 @@ void setup() {
   pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MIN);
   pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_MAX);
   pwm.setPWM(REAR_GATE_MICROSERVO, 0, MICROSERVO_MAX);
-  pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
+  pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MIN);
 }
 
 /* --- Loop --- */
@@ -231,7 +236,7 @@ void loop() {
 
 /* --- Actions --- */
 int grab_green(void) {
-  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_FRONT_MAX); // Sets gate to green
+  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_SORTING_GATE_MAX); // Sets gate to green
   pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX);
   delay(ARM_LIFT_DELAY);
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
@@ -244,7 +249,7 @@ int grab_green(void) {
 }
 
 int grab_orange(void) {
-  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_FRONT_MIN); // Sets gate to yellow
+  pwm.setPWM(SORTING_GATE_MICROSERVO, 0, MICROSERVO_SORTING_GATE_MIN); // Sets gate to yellow
   pwm.setPWM(ARM_LIFT_HEAVYSERVO, 0, HEAVYSERVO_MAX);
   delay(ARM_LIFT_DELAY);
   pwm.setPWM(ARM_EXTENSION_ACTUATOR, 0, ACTUATOR_MAX);
@@ -355,6 +360,7 @@ int transfer(void) {
   int x;
   while (true)  {
     x = line_detect();
+    
     if (x == -2) {
       set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
     }
@@ -371,14 +377,14 @@ int transfer(void) {
       set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
     }
     else if (x == 255) {
-      break;
+      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
     }
     else if (x == -255) {
       set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
     }
+    if (digitalRead(BACKUP_SWITCH_PIN)) { break; } // stop at the wall
   }
   set_wheel_servos(0, 0, 0, 0); // Stop servos
-  // TODO ADD SWITCH
   pwm.setPWM(REAR_GATE_MICROSERVO, 0, MICROSERVO_ZERO);
   return 0;
 }
