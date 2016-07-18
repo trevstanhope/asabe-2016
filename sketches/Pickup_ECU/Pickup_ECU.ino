@@ -25,9 +25,10 @@ int check_switch(void);
 /* --- Constants --- */
 // Time intevals
 const int WAIT_INTERVAL = 100;
-const int TURN30_INTERVAL = 1500;
+const int TURN30_INTERVAL = 2000;
 const int TURN60_INTERVAL = 3000;
-const int TURN90_INTERVAL = 4000;
+const int TURN90_INTERVAL = 3500;
+const int TURN135_INTERVAL = 4000;
 const int SWEEP45_INTERVAL = 3500;
 const int SWEEP90_INTERVAL = 5000;
 const int ARM_LIFT_DELAY = 500;
@@ -91,8 +92,8 @@ const int OFFSET_SAMPLES = 1;
 
 /// PWM Settings
 // Servo limit values are the pulse length count (out of 4096)
-const int MICROSERVO_SORTING_GATE_MIN = 200;
-const int MICROSERVO_SORTING_GATE_MAX = 550;
+const int MICROSERVO_SORTING_GATE_MIN = 470;
+const int MICROSERVO_SORTING_GATE_MAX = 200;
 const int MICROSERVO_MIN = 170;
 const int MICROSERVO_ZERO =  300;
 const int MICROSERVO_MAX =  520;
@@ -278,6 +279,8 @@ int forward(int value) {
 }
 
 int seek_line(void) {
+  set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
+  delay(TURN135_INTERVAL);
   set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
   while (line_detect() == -255) {
     delay(20);
@@ -362,10 +365,60 @@ int backup(int value) {
 }
 
 int transfer(void) {
-  int x;
-  while (true)  {
+  /*
+    Aligns robot at end of T.
+    1. Wiggle onto line
+    2. Reverse to end of line
+  */
+  // Advance a small distance
+  set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
+  delay(500);
+  set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
+  while (true) {
+    if (line_detect() == 0) {
+      break;
+    }
+    delay(20);
+  }
+  int x = line_detect();
+  int i = 0;
+  while (i <= 5) {
     x = line_detect();
-    
+    if (x == 0) {
+      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
+      i++;
+    }
+    else if (x == -1) {
+      set_wheel_servos(SERVO_FAST, -SERVO_SLOW, SERVO_FAST, -SERVO_SLOW);
+      i++;
+    }
+    else if (x == -2) {
+      set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
+      i = 0;
+    }
+    else if (x == 1) {
+      set_wheel_servos(SERVO_SLOW, -SERVO_FAST, SERVO_SLOW, -SERVO_FAST);
+      i++;
+    }
+    else if (x == 2) {
+      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
+      i = 0;
+    }
+    else if (x == -255) {
+      set_wheel_servos(-SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW);
+    }
+    else if (x == 255) {
+      while (line_detect() != 0) {
+        set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
+      }
+    }
+    delay(WAIT_INTERVAL);
+  }
+  set_wheel_servos(0, 0, 0, 0);
+
+  // Backup
+  while (!check_switch())  {
+    x = line_detect();
     if (x == -2) {
       set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
     }
@@ -387,7 +440,6 @@ int transfer(void) {
     else if (x == -255) {
       set_wheel_servos(-(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM, -(SERVO_MEDIUM + BACKUP_CORRECTION), SERVO_MEDIUM);
     }
-    if (check_switch()) { break; } // stop at the wall
   }
   set_wheel_servos(0, 0, 0, 0); // Stop servos
   pwm.setPWM(REAR_GATE_MICROSERVO, 0, GATE_MICROSERVO_OPEN);
@@ -423,8 +475,11 @@ int edge_manuever(void) {
 int jump(void) {
   set_wheel_servos(SERVO_MEDIUM, -SERVO_SLOW, SERVO_MEDIUM, -SERVO_SLOW);
   delay(TURN30_INTERVAL);
+  set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
+  while (line_detect() == -255) {
+    delay(20);
+  }
   set_wheel_servos(0, 0, 0, 0);
-  seek_line();
   return 0;
 }
 

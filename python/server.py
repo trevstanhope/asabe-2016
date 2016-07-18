@@ -109,6 +109,9 @@ class Server:
         self.orange_balls_collected = 0
         self.green_balls_collected = 0
         self.blank = np.zeros((self.CAMERA_HEIGHT, self.CAMERA_WIDTH), np.uint8)
+        self.last_value = 0
+        self.last_color = None
+        self.transfer_complete = False
     def decide_action(self, request):
         """
         Below is the Pseudocode for how the decisions are made:
@@ -119,7 +122,6 @@ class Server:
         
         if request['robot'] == 'picker':
             heading, distance, color = self.find_ball(np.array(request['bgr'], np.uint8))
-
 
         ## If paused
         if self.running == False:
@@ -133,10 +135,11 @@ class Server:
             if request['robot'] == 'picker':
                 if request['last_action'] == 'Z':
                     action = 'F5000' 
-                elif (request['last_action'] == 'F') or (request['last_action'] == 'L') or (request['last_action'] == 'R') or (request['last_action'] == 'C') or (request['last_action'] == 'E'):
-                    if (heading is not None) and (distance is not None) and (color is not None):
+                elif (request['last_action'] == 'F') or (request['last_action'] == 'L') or (request['last_action'] == 'R') or (request['last_action'] == 'C') or (request['last_action'] == 'E') or (request['last_action'] == 'B'):
+                    if ((heading is not None) and (distance is not None) and (color is not None)):
+                        self.last_color = color
                         self.pretty_print("DECIDE", "Heading: %d, Distance: %d, Color: %s" % (heading, distance, color))
-                        if distance < self.TARGET_DISTANCE:
+                        if distance <= self.TARGET_DISTANCE:
                             if color == 'green':
                                 action = 'G'
                                 self.green_balls_collected += 1
@@ -147,11 +150,22 @@ class Server:
                             action = 'L' + str(abs(heading))
                         elif heading > self.ALIGNMENT_TOLERANCE:
                             action = 'R' + str(abs(heading))
+                            self.last_value = abs(heading)
                         else:
                             action = 'F' + str(abs(distance))
+                            self.last_value = abs(heading)
                     else:
-                        self.pretty_print("DECIDE", "No ball detected! Backing up for safety!")
-                        action = 'B'
+                        if (request['last_action'] == 'F') and (self.last_value > 0 and self.last_value <= 2000):
+                            if self.last_color == 'green':
+                                action = 'G'
+                                self.green_balls_collected += 1
+                            else:
+                                action = 'O'
+                                self.orange_balls_collected += 1
+                        else:
+                            self.pretty_print("DECIDE", "No ball detected! Backing up for safety!")
+                            action = 'B500'
+                            self.last_value = 500
                 elif (request['last_action'] == 'G') or (request['last_action'] == 'O'):
                     if (self.orange_balls_collected + self.green_balls_collected == 1):
                         action = "E"
@@ -168,6 +182,7 @@ class Server:
                 elif request['last_action'] == 'J':
                     action = 'T'
                 elif request['last_action'] == 'T':
+                    self.transfer_complete = True
                     action = 'W'
                 elif request['last_action'] == '?':
                     action = '?'
@@ -187,14 +202,19 @@ class Server:
                     action = 'T' 
                 elif request['last_action'] == 'T':
                     action = 'W'
+                elif request['last_action'] == 'W':
+                    if self.transfer_complete:
+                        action = 'R'
+                    else:
+                        action = 'W'
                 elif request['last_action'] == 'R':
-                    action = 'G' + str(green_balls_collected)
+                    action = 'G' + str(self.green_balls_collected)
                 elif request['last_action'] == 'G':
-                    action = 'O' + str(orange_balls_collected)
+                    action = 'O' + str(self.orange_balls_collected)
                 elif request['last_action'] == 'O':
                     action = 'D'
                 elif request['last_action'] == 'D':
-                    action = 'W'
+                    action = '?'
                 elif request['last_action'] == '?':
                     action = '?'
                     self.pretty_print("WARNING", "Last action unknown! Check logs!")
@@ -211,7 +231,7 @@ class Server:
         return action
 
     ### Computer Vision ###
-    def find_ball(self, bgr, RADIUS_MIN=10, RADIUS_MAX=120):
+    def find_ball(self, bgr, RADIUS_MIN=4, RADIUS_MAX=40):
         """
         Find the contours for both masks, then use these
         to compute the minimum enclosing circle and centroid
@@ -225,21 +245,24 @@ class Server:
         ORANGE_UPPER = (self.ORANGE_HUE_MAX, self.ORANGE_SAT_MAX, self.ORANGE_VAL_MAX)
 
         if self.VERBOSE: self.pretty_print("CV2", "Searching for ball ...")
-        blurred = cv2.GaussianBlur(bgr, (11, 11), 0)
+        blurred = cv2.GaussianBlur(bgr, (25, 25), 0)
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         green_mask = cv2.inRange(hsv, GREEN_LOWER, GREEN_UPPER)
         green_mask = cv2.erode(green_mask, None, iterations=2)
         green_mask = cv2.dilate(green_mask, None, iterations=2)
         orange_mask = cv2.inRange(hsv, ORANGE_LOWER, ORANGE_UPPER)
-        orange_mask = cv2.erode(orange_mask, None, iterations=2)
+        orange_mask = cv2.erode(orange_mask, None, iterations=4)
         orange_mask = cv2.dilate(orange_mask, None, iterations=2)
         orange_bgr = np.dstack((self.blank, orange_mask, orange_mask)) # set self.mask to be accessed by the GUI
         green_bgr = np.dstack((self.blank, green_mask, self.blank)) # set self.mask to be accessed by the GUI
         detected_balls = []
-        gray_circles = cv2.HoughCircles(cv2.cvtColor(bgr, cv.CV_BGR2GRAY), cv.CV_HOUGH_GRADIENT, 4.0, 2)
-        if gray_circles is not None:
-            gray_circles = np.round(gray_circles[0, :]).astype("int")
-
+        orange_circles = cv2.HoughCircles(orange_mask, cv.CV_HOUGH_GRADIENT, 4.0, 10)
+        green_circles = cv2.HoughCircles(green_mask, cv.CV_HOUGH_GRADIENT, 4.0, 10)
+        if orange_circles is not None:
+            orange_circles = np.round(orange_circles[0, :]).astype("int")
+        if green_circles is not None:
+            green_circles = np.round(green_circles[0, :]).astype("int")
+ 
         # Green Contours
         green_contours = cv2.findContours(green_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
         center = None # initialize the current (x, y) center of the ball
@@ -247,12 +270,12 @@ class Server:
             for c in green_contours:
                 ((x, y), radius) = cv2.minEnclosingCircle(c)
                 if (radius > RADIUS_MIN) and (radius < RADIUS_MAX): # only proceed if the radius meets a minimum size
-                    if gray_circles is not None:
-                        for (x2,y2,r2) in gray_circles:
+                    if green_circles is not None:
+                        for (x2,y2,r2) in green_circles:
                             d = np.sqrt((x - x2)**2 + (y - y2)**2)
-                            if d < 10 and (r2 > RADIUS_MIN) and (r2 < RADIUS_MAX):
+                            if (d < 20) and (r2 > RADIUS_MIN) and (r2 < RADIUS_MAX):
                                 detected_balls.append((x,y,radius,'green'))
-                                cv2.circle(bgr, (int(x2), int(y2)), int(r2), (0, 255, 0), 2)
+                                cv2.circle(bgr, (int(x2), int(y2)), int(r2), (0, 255, 0), 2) 
                     else:
                         cv2.putText(green_bgr, 'X', (int(x)-10,int(y)+10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
 
@@ -263,10 +286,10 @@ class Server:
             for c in orange_contours:
                 ((x, y), radius) = cv2.minEnclosingCircle(c)
                 if (radius >= RADIUS_MIN) and (radius <= RADIUS_MAX): # only proceed if the radius meets a minimum size
-                    if gray_circles is not None:
-                        for (x2,y2,r2) in gray_circles:
+                    if orange_circles is not None:
+                        for (x2,y2,r2) in orange_circles:
                             d = np.sqrt((x - x2)**2 + (y - y2)**2)
-                            if d < 10 and (r2 > RADIUS_MIN) and (r2 < RADIUS_MAX):
+                            if d < 20 and (r2 > RADIUS_MIN) and (r2 < RADIUS_MAX):
                                 detected_balls.append((x,y,r2,'orange'))
                                 cv2.circle(bgr, (int(x2), int(y2)), int(r2), (0, 255, 255), 2)
                     else:

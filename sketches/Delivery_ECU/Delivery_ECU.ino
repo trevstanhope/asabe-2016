@@ -18,12 +18,13 @@ int jump(void);
 int line_detect(void);
 void start_clock(void);
 void stop_clock(void);
+int zero(void);
 
 /* --- Constants --- */
 // Time
 const int WAIT_INTERVAL = 100;
 const int STEP_INTERVAL = 1000;
-const int JUMP_INTERVAL = 1000;
+const int JUMP_INTERVAL = 3000;
 const int TURN90_INTERVAL = 2500;
 
 // Serial Commands
@@ -54,7 +55,7 @@ const int V                     = 'V';
 const int WAIT_COMMAND          = 'W';
 const int X                     = 'X';
 const int Y                     = 'Y';
-const int Z                     = 'Z';
+const int ZERO_COMMAND          = 'Z';
 const int UNKNOWN_COMMAND       = '?';
 
 /// Line Threshold
@@ -82,7 +83,7 @@ const int GREEN_ARM_MICROSERVO = 5; // right
 const int GREEN_MICROSERVO_MIN = 410;
 const int GREEN_MICROSERVO_MAX =  220; // this is the 'maximum' pulse length count (out of 4096)
 const int ORANGE_MICROSERVO_MIN = 130; //UP position
-const int ORANGE_MICROSERVO_MAX =  330; // DOWN position this is the 'maximum' pulse length count (out of 4096)
+const int ORANGE_MICROSERVO_MAX =  250; // DOWN position this is the 'maximum' pulse length count (out of 4096)
 const int SERVO_MIN = 300;
 const int SERVO_OFF = 335; // this is the servo off pulse length
 const int SERVO_MAX =  460; // this is the 'maximum' pulse length count (out of 4096)
@@ -195,6 +196,9 @@ void loop() {
       case TURN_COMMAND:
         result = turn_into_transfer_zone();
         break;
+      case FOLLOW_LINE_COMMAND:
+        result = follow_line();
+        break;
       case WAIT_COMMAND:
         result = wait();
         break;
@@ -220,6 +224,9 @@ void loop() {
         break;
       case REVERSE_COMMAND:
         result = reverse_to_end();
+        break;
+      case ZERO_COMMAND:
+        result = zero();
         break;
       default:
         result = 255;
@@ -274,17 +281,17 @@ int align(void) {
       i++;
     }
     else if (x == 2) {
-      set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
+      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
       i = 0;
     }
     else if (x == -255) {
-      set_wheel_servos(-SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW);
+      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
       i = 0;
     }
     else if (x == 255) {
       // Turn 90
-      set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
-      delay(TURN90_INTERVAL);
+      //set_wheel_servos(SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM, SERVO_MEDIUM);
+      //delay(TURN90_INTERVAL);
       break;
     }
     delay(WAIT_INTERVAL);
@@ -325,6 +332,9 @@ int follow_line(void) {
     else if (x == 255) {
       break;
     }
+    else {
+      set_wheel_servos(SERVO_SLOW, -SERVO_SLOW, SERVO_SLOW, -SERVO_SLOW);
+    }
     delay(50);
   }
   set_wheel_servos(0, 0, 0, 0); // Stop servos
@@ -334,7 +344,11 @@ int follow_line(void) {
 // 4. Turn and enter the transfer zone
 // #!TODO
 int turn_into_transfer_zone(void) {
-  set_wheel_servos(SERVO_SLOW, SERVO_SLOW, SERVO_SLOW, SERVO_SLOW);
+  set_wheel_servos(SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM);
+  delay(400);
+  set_wheel_servos(-SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM, -SERVO_MEDIUM);
+  delay(2500);
+  set_wheel_servos(0, 0, 0, 0);
   return 0;
 }
 
@@ -362,7 +376,7 @@ int reverse_to_end(void) {
       set_wheel_servos(-SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW);
     }
     else if (x == 2) {
-      set_wheel_servos(-SERVO_MEDIUM, SERVO_SLOW, -SERVO_MEDIUM, SERVO_SLOW);
+      set_wheel_servos(SERVO_MEDIUM, -SERVO_SLOW, SERVO_MEDIUM, -SERVO_SLOW);
     }
     else if (x == 0) {
       set_wheel_servos(-SERVO_MEDIUM, SERVO_MEDIUM, -SERVO_MEDIUM, SERVO_MEDIUM);
@@ -395,3 +409,16 @@ int up_wings(void) {
   pwm.setPWM(ORANGE_ARM_MICROSERVO, 0, ORANGE_MICROSERVO_MIN);
   return 0;
 }
+
+int zero(void) {
+  pwm.setPWMFreq(PWM_FREQ);  // This is the ideal PWM frequency for servos
+  pwm.setPWM(FRONT_LEFT_WHEEL_SERVO, 0, SERVO_OFF + FL);
+  pwm.setPWM(FRONT_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + FR);
+  pwm.setPWM(BACK_LEFT_WHEEL_SERVO, 0, SERVO_OFF + BL);
+  pwm.setPWM(BACK_RIGHT_WHEEL_SERVO, 0, SERVO_OFF + BR);
+  pwm.setPWM(GREEN_ARM_MICROSERVO, 0, GREEN_MICROSERVO_MIN);
+  pwm.setPWM(ORANGE_ARM_MICROSERVO, 0, ORANGE_MICROSERVO_MIN);
+  orange_balls = 0;
+  green_balls = 0;
+}
+
